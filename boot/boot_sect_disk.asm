@@ -1,4 +1,4 @@
-; load 'dh' sectors from drive 'dl' into ES:BX; dl gets from BIOS
+; load 'dh' sectors from drive 'dl' into ES:BX; dl gets from BIOS; es:bx
 disk_load:
     pusha
     push dx
