@@ -25,7 +25,7 @@ kernel.dis: kernel.bin
 	ndisasm -b 32 $< > $@
 
 %.o: %.c ${HEADERS}
-	${CC} ${CFLAGS} --freestanding -c $< -o $@
+	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
 %.bin: %.asm
 	nasm $< -f bin -o $@
