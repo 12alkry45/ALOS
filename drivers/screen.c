@@ -1,5 +1,6 @@
 #include "screen.h"
 
+#include "../kernel/utils.h"
 #include "ports.h"
 
 int get_cursor_offset();
@@ -39,13 +40,13 @@ void kernel_print(char* message) { kernel_print_at(message, -1, -1); }
  * Clear the screen
  */
 void clear_screen() {
-    unsigned char* video_memory = (unsigned char *) VIDEO_MEMORY;
-    int screen_size = MAX_COLS * MAX_ROWS;
-    for(int i = 0; i < screen_size; ++i) {
-        video_memory[i * 2] = ' ';
-        video_memory[i * 2 + 1] = WHITE_ON_BLACK;
-    }
-    set_cursor_offset(0);
+	unsigned char* video_memory = (unsigned char*)VIDEO_MEMORY;
+	int screen_size = MAX_COLS * MAX_ROWS;
+	for (int i = 0; i < screen_size; ++i) {
+		video_memory[i * 2] = ' ';
+		video_memory[i * 2 + 1] = WHITE_ON_BLACK;
+	}
+	set_cursor_offset(0);
 }
 
 /**
@@ -81,6 +82,16 @@ int print_char(char c, int col, int row, char attr) {
 		video_memory[offset + 1] = attr;
 		offset += 2;
 	}
+
+	if (offset >= MAX_COLS * MAX_ROWS * 2) {
+		memory_copy((char*)(get_offset(0, 1) + VIDEO_MEMORY),
+					(char*)(get_offset(0, 0) + VIDEO_MEMORY),
+					2 * MAX_COLS * (MAX_ROWS - 1));
+		char* last_line = (char*)(get_offset(0, MAX_ROWS - 1) + VIDEO_MEMORY);
+		for (int i = 0; i < MAX_COLS * 2; ++i) last_line[i] = 0;
+		offset -= 2 * MAX_COLS;
+	}
+
 	set_cursor_offset(offset);
 	return offset;
 }
