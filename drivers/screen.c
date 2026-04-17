@@ -101,10 +101,11 @@ static int32_t get_cursor_offset() {
 	int32_t offset = port_byte_in(REG_SCREEN_DATA) << 8;
 	port_byte_out(REG_SCREEN_CTRL, 15);
 	offset += port_byte_in(REG_SCREEN_DATA);
-	return offset;
+	return offset * 2;
 }
 
 static void set_cursor_offset(int32_t offset) {
+	offset >>= 1;
 	port_byte_out(REG_SCREEN_CTRL, 14);
 	port_byte_out(REG_SCREEN_DATA, offset >> 8);
 	port_byte_out(REG_SCREEN_CTRL, 15);
