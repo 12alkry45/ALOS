@@ -1,16 +1,12 @@
+#include "../cpu/idt.h"
+#include "../cpu/isr.h"
 #include "../drivers/screen.h"
 #include "utils.h"
 
 void main() {
+	isr_install();
+
 	clear_screen();
-
-	for (int i = 0; i < 25; i++) {
-		char str[255];
-		int_to_ascii(i, str);
-		kernel_print_at(str, 0, i);
-	}
-
-	kernel_print_at(
-		"This text forces the kernel to scroll. Row 0 will disappear. ", 60,
-		24);
+	__asm__ __volatile__("int $6");
+	__asm__ __volatile__("int $15");
 }
