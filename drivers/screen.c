@@ -3,19 +3,19 @@
 #include "../kernel/utils.h"
 #include "ports.h"
 
-int get_cursor_offset();
-void set_cursor_offset(int offset);
-int get_offset_row();
-int get_offset_col();
-int get_offset(int col, int row);
-int print_char(char c, int col, int row, char attr);
+static int32_t get_cursor_offset();
+static void set_cursor_offset(int32_t offset);
+static int32_t get_offset_row();
+static int32_t get_offset_col();
+static int32_t get_offset(int32_t col, int32_t row);
+static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr);
 
 /**
  * Print the message on the specified location.
  * If col or row is negative, we will use current offset.
  */
-void kernel_print_at(char* message, int col, int row) {
-	int offset = 0;
+void kernel_print_at(char* message, int32_t col, int32_t row) {
+	int32_t offset = 0;
 	if (col >= 0 && row >= 0) {
 		offset = get_offset(col, row);
 	} else {
@@ -40,7 +40,7 @@ void kernel_print(char* message) { kernel_print_at(message, -1, -1); }
  * Clear the screen
  */
 void clear_screen() {
-	unsigned char* video_memory = (unsigned char*)VIDEO_MEMORY;
+	uint8_t* video_memory = (uint8_t*)VIDEO_MEMORY;
 	int screen_size = MAX_COLS * MAX_ROWS;
 	for (int i = 0; i < screen_size; ++i) {
 		video_memory[i * 2] = ' ';
@@ -57,8 +57,8 @@ void clear_screen() {
  * Returns the offset of the next character
  * Sets the video cursor to the returned offset
  */
-int print_char(char c, int col, int row, char attr) {
-	unsigned char* video_memory = (unsigned char*)VIDEO_MEMORY;
+static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr) {
+	uint8_t* video_memory = (uint8_t*)VIDEO_MEMORY;
 	if (col >= MAX_COLS || row >= MAX_ROWS) {
 		video_memory[2 * MAX_ROWS * MAX_COLS - 2] = 'E';
 		video_memory[2 * MAX_ROWS * MAX_COLS - 1] = RED_ON_WHITE;
@@ -67,7 +67,7 @@ int print_char(char c, int col, int row, char attr) {
 
 	if (!attr) attr = WHITE_ON_BLACK;
 
-	int offset = 0;
+	int32_t offset = 0;
 	if (col >= 0 && row >= 0) {
 		offset = get_offset(col, row);
 	} else {
@@ -96,25 +96,29 @@ int print_char(char c, int col, int row, char attr) {
 	return offset;
 }
 
-int get_cursor_offset() {
+static int32_t get_cursor_offset() {
 	port_byte_out(REG_SCREEN_CTRL, 14);
-	int offset = port_byte_in(REG_SCREEN_DATA) << 8;
+	int32_t offset = port_byte_in(REG_SCREEN_DATA) << 8;
 	port_byte_out(REG_SCREEN_CTRL, 15);
 	offset += port_byte_in(REG_SCREEN_DATA);
 	return offset;
 }
 
-void set_cursor_offset(int offset) {
+static void set_cursor_offset(int32_t offset) {
 	port_byte_out(REG_SCREEN_CTRL, 14);
 	port_byte_out(REG_SCREEN_DATA, offset >> 8);
 	port_byte_out(REG_SCREEN_CTRL, 15);
 	port_byte_out(REG_SCREEN_DATA, offset & 0xFF);
 }
 
-int get_offset(int col, int row) { return 2 * (row * MAX_COLS + col); }
+static int32_t get_offset(int32_t col, int32_t row) {
+	return 2 * (row * MAX_COLS + col);
+}
 
-int get_offset_row(int offset) { return offset / (2 * MAX_COLS); }
+static int32_t get_offset_row(int32_t offset) {
+	return offset / (2 * MAX_COLS);
+}
 
-int get_offset_col(int offset) {
+static int32_t get_offset_col(int32_t offset) {
 	return (offset - (get_offset_row(offset) * 2 * MAX_COLS)) / 2;
 }

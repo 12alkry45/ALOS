@@ -1,3 +1,8 @@
+#ifndef SCREEN_H
+#define SCREEN_H
+
+#include "../cpu/types.h"
+
 #define VIDEO_MEMORY 0xB8000
 #define MAX_COLS 80
 #define MAX_ROWS 25
@@ -8,5 +13,7 @@
 #define REG_SCREEN_DATA 0x3D5
 
 void clear_screen();
-void kernel_print_at(char* message, int col, int row);
+void kernel_print_at(char* message, int32_t col, int32_t row);
 void kernel_print(char* message);
+
+#endif
