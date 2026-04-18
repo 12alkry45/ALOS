@@ -22,12 +22,22 @@ void int_to_ascii(int n, char str[]) {
 	} while ((n /= 10) > 0);
 
 	if (sign < 0) str[i++] = '-';
-
-	for (size_t j = 0; j < i / 2; j++) {
-		char c;
-		c = str[j];
-		str[j] = str[i - j - 1];
-		str[i - j - 1] = c;
-	}
 	str[i] = '\0';
+
+	reverse(str);
+}
+
+void reverse(char str[]) {
+	char c = 0;
+	for (int i = 0, j = strlen(str) - 1; i < j; i++, j--) {
+		c = str[i];
+		str[i] = str[j - i];
+		str[j - i] = c;
+	}
+}
+
+int strlen(char str[]) {
+	int i = 0;
+	while (str[i] != 0) ++i;
+	return i;
 }
