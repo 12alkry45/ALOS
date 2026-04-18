@@ -4,6 +4,13 @@
 #include "../kernel/utils.h"
 #include "idt.h"
 
+#define PORT_PIC_CTRL_MASTER 0x20
+#define PORT_PIC_CTRL_SLAVE 0x21
+#define PORT_PIC_DATA_MASTER 0xA0
+#define PORT_PIC_DATA_SLAVE 0xA1
+
+isr_t interupt_handlers[256];
+
 void isr_install() {
 	set_idt_gate(0, (uint32_t)isr0);
 	set_idt_gate(1, (uint32_t)isr1);
@@ -38,7 +45,43 @@ void isr_install() {
 	set_idt_gate(30, (uint32_t)isr30);
 	set_idt_gate(31, (uint32_t)isr31);
 
+	set_up_PIC();
+
+	set_idt_gate(32, (uint32_t)irq0);
+	set_idt_gate(33, (uint32_t)irq1);
+	set_idt_gate(34, (uint32_t)irq2);
+	set_idt_gate(35, (uint32_t)irq3);
+	set_idt_gate(36, (uint32_t)irq4);
+	set_idt_gate(37, (uint32_t)irq5);
+	set_idt_gate(38, (uint32_t)irq6);
+	set_idt_gate(39, (uint32_t)irq7);
+	set_idt_gate(40, (uint32_t)irq8);
+	set_idt_gate(41, (uint32_t)irq9);
+	set_idt_gate(42, (uint32_t)irq10);
+	set_idt_gate(43, (uint32_t)irq11);
+	set_idt_gate(44, (uint32_t)irq12);
+	set_idt_gate(45, (uint32_t)irq13);
+	set_idt_gate(46, (uint32_t)irq14);
+	set_idt_gate(47, (uint32_t)irq15);
+
 	set_idt();
+}
+
+void set_up_PIC() {
+	port_byte_out(PORT_PIC_CTRL_MASTER, 0x11);
+	port_byte_out(PORT_PIC_CTRL_SLAVE, 0x11);
+	// numbers
+	port_byte_out(PORT_PIC_DATA_MASTER, 0x20);	// 32
+	port_byte_out(PORT_PIC_DATA_SLAVE, 0x28);	// 40
+	// master-slave
+	port_byte_out(PORT_PIC_DATA_MASTER, 0x04);	// IRQ2, mask
+	port_byte_out(PORT_PIC_DATA_SLAVE, 0x02);	// 2
+	// mode 8086
+	port_byte_out(PORT_PIC_DATA_MASTER, 0x01);
+	port_byte_out(PORT_PIC_DATA_SLAVE, 0x01);
+	// masks
+	port_byte_out(PORT_PIC_DATA_MASTER, 0x0);
+	port_byte_out(PORT_PIC_DATA_SLAVE, 0x0);
 }
 
 char* exception_messages[] = {"Division By Zero",
@@ -85,4 +128,18 @@ void isr_handler(registers_t r) {
 	kernel_print("\n");
 	kernel_print(exception_messages[r.int_num]);
 	kernel_print("\n");
+}
+
+void irq_handler(registers_t r) {
+	if (r.int_num >= 40) port_byte_out(PORT_PIC_CTRL_SLAVE, PIC_EOI);
+	port_byte_out(PORT_PIC_CTRL_MASTER, PIC_EOI);
+
+    if(interupt_handlers[r.int_num] != 0) {
+        isr_t handler = interupt_handlers[r.int_num];
+        handler(r);
+    }
+}
+
+void register_interrupt_handler(uint8_t n, isr_t handler) {
+	interupt_handlers[n] = handler;
 }
