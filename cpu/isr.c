@@ -1,15 +1,18 @@
 #include "isr.h"
 
+#include "../drivers/ports.h"
 #include "../drivers/screen.h"
 #include "../kernel/utils.h"
 #include "idt.h"
 
 #define PORT_PIC_CTRL_MASTER 0x20
-#define PORT_PIC_CTRL_SLAVE 0x21
-#define PORT_PIC_DATA_MASTER 0xA0
+#define PORT_PIC_CTRL_SLAVE 0xA0
+#define PORT_PIC_DATA_MASTER 0x21
 #define PORT_PIC_DATA_SLAVE 0xA1
 
 isr_t interupt_handlers[256];
+
+static void set_up_PIC();
 
 void isr_install() {
 	set_idt_gate(0, (uint32_t)isr0);
@@ -67,7 +70,7 @@ void isr_install() {
 	set_idt();
 }
 
-void set_up_PIC() {
+static void set_up_PIC() {
 	port_byte_out(PORT_PIC_CTRL_MASTER, 0x11);
 	port_byte_out(PORT_PIC_CTRL_SLAVE, 0x11);
 	// numbers
@@ -134,10 +137,10 @@ void irq_handler(registers_t r) {
 	if (r.int_num >= 40) port_byte_out(PORT_PIC_CTRL_SLAVE, PIC_EOI);
 	port_byte_out(PORT_PIC_CTRL_MASTER, PIC_EOI);
 
-    if(interupt_handlers[r.int_num] != 0) {
-        isr_t handler = interupt_handlers[r.int_num];
-        handler(r);
-    }
+	if (interupt_handlers[r.int_num] != 0) {
+		isr_t handler = interupt_handlers[r.int_num];
+		handler(r);
+	}
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
