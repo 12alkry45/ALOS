@@ -3,13 +3,9 @@
 #include "../cpu/timer.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/screen.h"
-#include "utils.h"
 
 void main() {
 	isr_install();
-
+	irq_install();
 	clear_screen();
-	__asm__ __volatile__("sti");
-	// init_timer(19);
-	init_keyboard();
 }

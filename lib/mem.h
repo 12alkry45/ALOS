@@ -1,12 +1,9 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef MEM_H
+#define MEM_H
 
 #include "../cpu/types.h"
 
 void memory_copy(uint8_t* source, uint8_t* dest, size_t nbytes);
 void memory_set(uint8_t* dest, uint8_t val, uint32_t len);
-void int_to_ascii(int n, char str[]);
-void reverse(char str[]);
-int strlen(char str[]);
 
 #endif

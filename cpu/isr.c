@@ -1,9 +1,11 @@
 #include "isr.h"
 
+#include "../drivers/keyboard.h"
 #include "../drivers/ports.h"
 #include "../drivers/screen.h"
-#include "../kernel/utils.h"
+#include "../lib/string.h"
 #include "idt.h"
+#include "timer.h"
 
 #define PORT_PIC_CTRL_MASTER 0x20
 #define PORT_PIC_CTRL_SLAVE 0xA0
@@ -145,4 +147,10 @@ void irq_handler(registers_t r) {
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
 	interupt_handlers[n] = handler;
+}
+
+void irq_install() {
+	__asm__ __volatile__("sti");
+	init_timer(50);
+	init_keyboard();
 }
