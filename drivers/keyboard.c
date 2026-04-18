@@ -1,8 +1,9 @@
 #include "keyboard.h"
 
 #include "../cpu/isr.h"
+#include "../cpu/ports.h"
+#include "../lib/function.h"
 #include "../lib/string.h"
-#include "ports.h"
 #include "screen.h"
 
 void print_letter(uint8_t scancode);
@@ -16,6 +17,7 @@ static void keyboard_callback(registers_t r) {
 	kernel_print(", ");
 	print_letter(scancode);
 	kernel_print("\n");
+	UNUSED(r);
 }
 
 void init_keyboard() { register_interrupt_handler(IRQ1, keyboard_callback); }

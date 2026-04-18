@@ -5,7 +5,8 @@ OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o}
 CC = /home/alesha/opt/cross/bin/i686-elf-gcc
 LD = /home/alesha/opt/cross/bin/i686-elf-ld
 GDB = /home/alesha/opt/cross/bin/i686-elf-gdb
-CFLAGS = -g
+CFLAGS = -g -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
+		 -Wall -Wextra -Werror
 
 all: run
 
@@ -34,7 +35,7 @@ kernel.dis: kernel.bin
 	nasm $< -f elf -o $@
 
 debug: os-image.bin kernel.elf
-	qemu-system-i386 -s -fda os-image.bin &
+	qemu-system-i386 -s -fda os-image.bin -d guest_errors,int &
 	${GDB} -ex "target remote localhost:1234" -ex "symbol-file kernel.elf"
 
 clean:

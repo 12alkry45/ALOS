@@ -1,7 +1,7 @@
 #include "screen.h"
 
+#include "../cpu/ports.h"
 #include "../lib/mem.h"
-#include "ports.h"
 
 static int32_t get_cursor_offset();
 static void set_cursor_offset(int32_t offset);
@@ -84,8 +84,8 @@ static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr) {
 	}
 
 	if (offset >= MAX_COLS * MAX_ROWS * 2) {
-		memory_copy((char*)(get_offset(0, 1) + VIDEO_MEMORY),
-					(char*)(get_offset(0, 0) + VIDEO_MEMORY),
+		memory_copy((uint8_t*)(get_offset(0, 1) + VIDEO_MEMORY),
+					(uint8_t*)(get_offset(0, 0) + VIDEO_MEMORY),
 					2 * MAX_COLS * (MAX_ROWS - 1));
 		char* last_line = (char*)(get_offset(0, MAX_ROWS - 1) + VIDEO_MEMORY);
 		for (int i = 0; i < MAX_COLS * 2; ++i) last_line[i] = 0;
