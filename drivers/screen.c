@@ -10,6 +10,8 @@ static int32_t get_offset_col();
 static int32_t get_offset(int32_t col, int32_t row);
 static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr);
 
+#define BACKSPACE 0x08
+
 /**
  * Print the message on the specified location.
  * If col or row is negative, we will use current offset.
@@ -49,6 +51,13 @@ void clear_screen() {
 	set_cursor_offset(0);
 }
 
+void kernel_print_backspace() {
+	int32_t offset = get_cursor_offset() - 2;
+	int32_t col = get_offset_col(offset);
+	int32_t row = get_offset_row(offset);
+	print_char(BACKSPACE, col, row, WHITE_ON_BLACK);	 // backspace
+}
+
 /**
  * Print function for the kernel, directly accesses the video memory
  *
@@ -77,6 +86,9 @@ static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr) {
 	if (c == '\n') {
 		row = get_offset_row(offset);
 		offset = get_offset(0, row + 1);
+	} else if (c == BACKSPACE) {
+		video_memory[offset] = ' ';
+		video_memory[offset + 1] = attr;
 	} else {
 		video_memory[offset] = c;
 		video_memory[offset + 1] = attr;

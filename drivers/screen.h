@@ -15,5 +15,6 @@
 void clear_screen();
 void kernel_print_at(char* message, int32_t col, int32_t row);
 void kernel_print(char* message);
+void kernel_print_backspace();
 
 #endif
