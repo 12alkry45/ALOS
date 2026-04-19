@@ -5,8 +5,7 @@ OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o}
 CC = /home/alesha/opt/cross/bin/i686-elf-gcc
 LD = /home/alesha/opt/cross/bin/i686-elf-ld
 GDB = /home/alesha/opt/cross/bin/i686-elf-gdb
-CFLAGS = -g -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
-		 -Wall -Wextra -Werror
+CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
 
 all: run
 
@@ -26,7 +25,7 @@ kernel.dis: kernel.bin
 	ndisasm -b 32 $< > $@
 
 %.o: %.c ${HEADERS}
-	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 %.bin: %.asm
 	nasm $< -f bin -o $@

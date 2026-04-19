@@ -125,22 +125,22 @@ char* exception_messages[] = {"Division By Zero",
 							  "Reserved",
 							  "Reserved"};
 
-void isr_handler(registers_t r) {
+void isr_handler(registers_t* r) {
 	kernel_print("Recieved interrupt:");
 	char s[3];
-	int_to_ascii(r.int_num, s);
+	int_to_ascii(r->int_num, s);
 	kernel_print(s);
 	kernel_print("\n");
-	kernel_print(exception_messages[r.int_num]);
+	kernel_print(exception_messages[r->int_num]);
 	kernel_print("\n");
 }
 
-void irq_handler(registers_t r) {
-	if (r.int_num >= 40) port_byte_out(PORT_PIC_CTRL_SLAVE, PIC_EOI);
+void irq_handler(registers_t* r) {
+	if (r->int_num >= 40) port_byte_out(PORT_PIC_CTRL_SLAVE, PIC_EOI);
 	port_byte_out(PORT_PIC_CTRL_MASTER, PIC_EOI);
 
-	if (interupt_handlers[r.int_num] != 0) {
-		isr_t handler = interupt_handlers[r.int_num];
+	if (interupt_handlers[r->int_num] != 0) {
+		isr_t handler = interupt_handlers[r->int_num];
 		handler(r);
 	}
 }

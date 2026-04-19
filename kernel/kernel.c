@@ -5,7 +5,7 @@
 #include "../lib/mem.h"
 #include "../lib/string.h"
 
-void main() {
+void kernel_main() {
 	isr_install();
 	irq_install();
 	clear_screen();

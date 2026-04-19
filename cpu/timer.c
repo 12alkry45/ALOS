@@ -6,7 +6,7 @@
 
 uint32_t tick = 0;
 
-static void timer_callback(registers_t r) {
+static void timer_callback(registers_t* r) {
 	tick++;
 	UNUSED(r);
 }

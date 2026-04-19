@@ -1,7 +1,7 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "../cpu/types.h"
+#include <stdint.h>
 
 #define VIDEO_MEMORY 0xB8000
 #define MAX_COLS 80

@@ -29,7 +29,7 @@ const char scancode_ascii[] = {
 	'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', '?', '\\', 'Z',
 	'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', '?', '?',	'?', ' '};
 
-static void keyboard_callback(registers_t r) {
+static void keyboard_callback(registers_t *r) {
 	uint8_t scancode = port_byte_in(PORT_KEYBOARD_READ);
 	if (scancode > SCANCODE_MAX) return;
 	if (scancode == BACKSPACE) {
