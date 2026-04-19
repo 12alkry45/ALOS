@@ -14,6 +14,23 @@ void int_to_ascii(int n, char str[]) {
 	reverse(str);
 }
 
+void hex_to_ascii(int n, char str[]) {
+	append(str, '0');
+	append(str, 'x');
+	int digit = 0;
+	char skip_zero = 1;
+	for (int i = 28; i >= 0; i -= 4) {
+		digit = (n >> i) & 0xF;
+		if (digit == 0 && skip_zero == 1) continue;
+		skip_zero = 0;
+		if (digit >= 0xA) {
+			append(str, digit - 0xA + 'A');
+		} else {
+			append(str, digit + '0');
+		}
+	}
+}
+
 void reverse(char str[]) {
 	char c = 0;
 	for (int i = 0, j = strlen(str) - 1; i < j; i++, j--) {
