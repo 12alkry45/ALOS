@@ -24,6 +24,6 @@ static inline bitmap_word_t bitmap_test(bitmap_word_t* bitmap, size_t bit) {
 		   ((bitmap_word_t)1 << OFFSET_FROM_BIT(bit));
 }
 
-bitmap_word_t bitmap_find_first_zero(bitmap_word_t* bitmap, size_t bit_num);
+size_t bitmap_find_first_zero(const bitmap_word_t* bitmap, size_t bit_num);
 
 #endif

@@ -8,7 +8,7 @@ static void set_cursor_offset(int32_t offset);
 static int32_t get_offset_row();
 static int32_t get_offset_col();
 static int32_t get_offset(int32_t col, int32_t row);
-static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr);
+static int32_t print_char(const char c, int32_t col, int32_t row, uint8_t attr);
 
 #define BACKSPACE 0x08
 
@@ -16,7 +16,7 @@ static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr);
  * Print the message on the specified location.
  * If col or row is negative, we will use current offset.
  */
-void kernel_print_at(char* message, int32_t col, int32_t row) {
+void kernel_print_at(const char* message, int32_t col, int32_t row) {
 	int32_t offset = 0;
 	if (col >= 0 && row >= 0) {
 		offset = get_offset(col, row);
@@ -36,7 +36,7 @@ void kernel_print_at(char* message, int32_t col, int32_t row) {
 /**
  * Print the message on the current cursor location
  */
-void kernel_print(char* message) { kernel_print_at(message, -1, -1); }
+void kernel_print(const char* message) { kernel_print_at(message, -1, -1); }
 
 /**
  * Clear the screen
@@ -66,7 +66,7 @@ void kernel_print_backspace() {
  * Returns the offset of the next character
  * Sets the video cursor to the returned offset
  */
-static int32_t print_char(char c, int32_t col, int32_t row, uint8_t attr) {
+static int32_t print_char(const char c, int32_t col, int32_t row, uint8_t attr) {
 	uint8_t* video_memory = (uint8_t*)VIDEO_MEMORY;
 	if (col >= MAX_COLS || row >= MAX_ROWS) {
 		video_memory[2 * MAX_ROWS * MAX_COLS - 2] = 'E';
