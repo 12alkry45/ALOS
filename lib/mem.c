@@ -25,3 +25,13 @@ uint32_t kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
 	free_memory_addr += size;
 	return return_addr;
 }
+
+uint32_t kmalloc_aligned(size_t size) { return kernel_malloc(size, 1, NULL); }
+
+uint32_t kmalloc_with_phys(size_t size, uint32_t* phys_addr) {
+	return kernel_malloc(size, 0, phys_addr);
+}
+
+uint32_t kmalloc_aligned_with_phys(size_t size, uint32_t* phys_addr) {
+	return kernel_malloc(size, 1, phys_addr);
+}

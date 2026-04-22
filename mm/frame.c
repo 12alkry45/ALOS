@@ -2,6 +2,7 @@
 
 #include "../lib/bitmap.h"
 #include "../lib/mem.h"
+#include "../lib/panic.h"
 
 static uint32_t* frame_bitmap = NULL;
 static uintptr_t physical_memory_base = 0;
@@ -10,13 +11,14 @@ static size_t total_frames = 0;
 void init_frames(uintptr_t* addr, size_t memory_size) {
 	frame_bitmap = (uint32_t*)addr;
 	total_frames = memory_size >> 12;
-	memory_set(frame_bitmap, 0, BITMAP_WORDS(total_frames) * sizeof(uint32_t));
+	memory_set((uint8_t*)frame_bitmap, 0,
+			   BITMAP_WORDS(total_frames) * sizeof(uint32_t));
 }
 
 bool frame_is_free(uintptr_t frame_addr) {
 	uint32_t frame_idx = frame_addr >> 12;
 	if (frame_idx >= total_frames) return false;
-	return bitmap_test(frame_bitmap, frame_idx) == 0;
+	return bitmap_test((uint32_t*)frame_bitmap, frame_idx) == 0;
 }
 
 uintptr_t alloc_frame() {
