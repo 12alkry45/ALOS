@@ -13,7 +13,7 @@ void memory_set(uint8_t* dest, uint8_t val, uint32_t len) {
 	}
 }
 
-uint32_t free_memory_addr = 0x10000;
+uint32_t free_memory_addr = 0x100000;
 
 uint32_t kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
 	if (align == 1 && (free_memory_addr & 0xFFF)) {

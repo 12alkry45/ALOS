@@ -126,13 +126,16 @@ char* exception_messages[] = {"Division By Zero",
 							  "Reserved"};
 
 void isr_handler(registers_t* r) {
-	kernel_print("Recieved interrupt:");
-	char s[3];
-	int_to_ascii(r->int_num, s);
-	kernel_print(s);
-	kernel_print("\n");
-	kernel_print(exception_messages[r->int_num]);
-	kernel_print("\n");
+	if (interupt_handlers[r->int_num] != 0) {
+		isr_t handler = interupt_handlers[r->int_num];
+		handler(r);
+	} else {
+		kernel_print("\nINTERUPTION: ");
+		char str[3];
+		int_to_ascii(r->int_num, str);
+		kernel_print(str);
+		kernel_print("\n");
+	}
 }
 
 void irq_handler(registers_t* r) {
