@@ -1,6 +1,7 @@
 #include "paging.h"
 
 #include "../cpu/isr.h"
+#include "../cpu/register.h"
 #include "../drivers/screen.h"
 #include "../lib/mem.h"
 #include "../lib/panic.h"
@@ -17,8 +18,7 @@ void alloc_page(page_t* page, int is_user_mode, int is_writeable);
 void free_page(page_t* page);
 
 void init_paging() {
-	uint32_t mem_end_page = 0x1000000;	// 16MB
-	init_frames(mem_end_page / 0x1000);
+	init_frames();
 
 	kernel_directory =
 		(page_directory_t*)kmalloc_aligned(sizeof(page_directory_t));
@@ -58,11 +58,9 @@ void free_page(page_t* page) {
 
 void switch_page_directory(page_directory_t* dir) {
 	current_directory = dir;
-	asm volatile("mov %0, %%cr3" ::"r"(dir->physical_table));
-	uint32_t cr0;
-	asm volatile("mov %%cr0, %0" : "=r"(cr0));
-	cr0 |= 0x80000000;
-	asm volatile("mov %0, %%cr0" ::"r"(cr0));
+	write_cr3((uint32_t)dir->physical_table);
+	uint32_t cr0 = read_cr0();
+	write_cr0(cr0 | 0x80000000);
 }
 
 page_t* get_page(uint32_t address, int make, page_directory_t* dir) {
@@ -71,12 +69,12 @@ page_t* get_page(uint32_t address, int make, page_directory_t* dir) {
 	if (dir->virtual_table[table_idx]) {
 		return &dir->virtual_table[table_idx]->pages[address % 1024];
 	} else if (make) {
-		uint32_t tmp;
+		uint32_t phys;
 		dir->virtual_table[table_idx] =
 			(page_table_t*)kmalloc_aligned_with_phys(sizeof(page_table_t),
-													 &tmp);
+													 &phys);
 		memory_set((uint8_t*)dir->virtual_table[table_idx], 0, 0x1000);
-		dir->physical_table[table_idx] = tmp | 0x7;	 // P, RW, US.
+		dir->physical_table[table_idx] = phys | 0x7;  // P, RW, US.
 		return &dir->virtual_table[table_idx]->pages[address % 1024];
 	} else {
 		return 0;
@@ -84,8 +82,7 @@ page_t* get_page(uint32_t address, int make, page_directory_t* dir) {
 }
 
 static void page_fault_handler(registers_t* r) {
-	uint32_t faulting_address;
-	__asm__ __volatile__("mov %%cr2, %0" : "=r"(faulting_address));
+	uint32_t faulting_address = read_cr2();
 
 	int present = !(r->err_code & 0x1);	 // Page not present
 	int writeable = r->err_code & 0x2;	 // Write operation?

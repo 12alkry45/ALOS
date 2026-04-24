@@ -22,16 +22,16 @@ static uint32_t test_frame(uint32_t frame_addr) {
 	return bitmap_test(frames, frame);
 }
 
-uint32_t first_frame() {
+static uint32_t first_frame() {
 	return (uint32_t)bitmap_find_first_zero(frames, frames_num);
 }
 
-uint32_t get_bitmap_frames_size() {
+static uint32_t get_bitmap_frames_size() {
 	return BITMAP_WORDS(frames_num) * sizeof(bitmap_word_t);
 }
 
-void init_frames(uint32_t size) {
-    frames_num = size;
+void init_frames() {
+	frames_num = MEM_SIZE;
 	uint32_t bitmap_size = get_bitmap_frames_size();
 	frames = (bitmap_word_t*)kmalloc(bitmap_size);
 	memory_set((uint8_t*)frames, 0, bitmap_size);
