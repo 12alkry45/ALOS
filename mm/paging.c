@@ -1,7 +1,7 @@
 #include "paging.h"
 
-#include "../cpu/isr.h"
-#include "../cpu/register.h"
+#include "../arch/isr.h"
+#include "../arch/register.h"
 #include "../drivers/screen.h"
 #include "../lib/mem.h"
 #include "../lib/panic.h"

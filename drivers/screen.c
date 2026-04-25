@@ -1,6 +1,6 @@
 #include "screen.h"
 
-#include "../cpu/ports.h"
+#include "../arch/ports.h"
 #include "../lib/mem.h"
 
 static int32_t get_cursor_offset();

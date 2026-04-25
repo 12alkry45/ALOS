@@ -2,3 +2,4 @@
 *.o
 *.elf
 os-image.bin
+build/
