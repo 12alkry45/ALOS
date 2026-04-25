@@ -1,8 +1,9 @@
 #include "isr.h"
 
-#include "../drivers/keyboard.h"
-#include "../drivers/screen.h"
-#include "../lib/string.h"
+#include <drivers/keyboard.h>
+#include <drivers/screen.h>
+#include <lib/string.h>
+
 #include "idt.h"
 #include "ports.h"
 #include "timer.h"

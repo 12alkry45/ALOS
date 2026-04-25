@@ -1,8 +1,8 @@
 #include "kernel.h"
 
-#include "../drivers/screen.h"
-#include "../lib/mem.h"
-#include "../lib/string.h"
+#include <drivers/screen.h>
+#include <lib/mem.h>
+#include <lib/string.h>
 
 void user_input(char* input) {
 	if (strcmp(input, "END") == 0) {

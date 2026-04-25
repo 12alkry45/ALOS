@@ -1,7 +1,7 @@
 #ifndef LIB_PANIC_H
 #define LIB_PANIC_H
 
-#include "../lib/string.h"
+#include "string.h"
 
 extern void kernel_print(const char* message);
 extern void int_to_ascii(int n, char str[]);

@@ -1,8 +1,7 @@
+#include <arch/isr.h>
+#include <drivers/screen.h>
+#include <mm/paging.h>
 #include <stdint.h>
-
-#include "../arch/isr.h"
-#include "../drivers/screen.h"
-#include "../mm/paging.h"
 
 void kernel_main() {
 	isr_install();

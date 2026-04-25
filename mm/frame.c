@@ -1,8 +1,8 @@
 #include "frame.h"
 
-#include "../lib/bitmap.h"
-#include "../lib/mem.h"
-#include "../lib/panic.h"
+#include <lib/bitmap.h>
+#include <lib/mem.h>
+#include <lib/panic.h>
 
 bitmap_word_t* frames;
 uint32_t frames_num;

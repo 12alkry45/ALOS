@@ -1,12 +1,13 @@
 #include "paging.h"
 
-#include "../arch/isr.h"
-#include "../arch/register.h"
-#include "../drivers/screen.h"
-#include "../lib/mem.h"
-#include "../lib/panic.h"
-#include "../lib/string.h"
-#include "../mm/frame.h"
+#include <arch/isr.h>
+#include <arch/register.h>
+#include <drivers/screen.h>
+#include <lib/mem.h>
+#include <lib/panic.h>
+#include <lib/string.h>
+
+#include "frame.h"
 
 extern uint32_t free_memory_addr;
 

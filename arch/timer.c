@@ -1,6 +1,7 @@
 #include "timer.h"
 
-#include "../lib/function.h"
+#include <lib/function.h>
+
 #include "isr.h"
 #include "ports.h"
 
