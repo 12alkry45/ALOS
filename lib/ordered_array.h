@@ -16,8 +16,8 @@ typedef struct {
 
 int8_t standart_less_than_function(type_t a, type_t b);
 
-void create_ordered_array(size_t max_size, less_than_function_t less_than);
-void place_ordered_array(void* address, size_t max_size,
+ordered_array_t create_ordered_array(size_t max_size, less_than_function_t less_than);
+ordered_array_t place_ordered_array(void* address, size_t max_size,
 						 less_than_function_t less_than);
 
 void destroy_ordered_array(ordered_array_t* array);

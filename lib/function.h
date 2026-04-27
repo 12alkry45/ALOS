@@ -10,6 +10,6 @@
 		if (!(condition)) {            \
 			PANIC("Assertion failed!") \
 		}                              \
-	} while (0)
+	} while (0);
 
 #endif

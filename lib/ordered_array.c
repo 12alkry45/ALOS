@@ -13,8 +13,8 @@ ordered_array_t create_ordered_array(size_t max_size,
 	return array;
 }
 
-void place_ordered_array(void* address, size_t max_size,
-						 less_than_function_t less_than) {
+ordered_array_t place_ordered_array(void* address, size_t max_size,
+									less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (type_t*)address;
 	memory_set((uint8_t)array.array, 0, max_size * sizeof(type_t));

@@ -20,6 +20,6 @@ NORETURN void panic(const char* msg);
 		kernel_print(line_buf);               \
 		kernel_print("\nMSG: " msg "\n");     \
 		panic(msg);                           \
-	} while (0)
+	} while (0);
 
 #endif
