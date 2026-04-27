@@ -25,9 +25,6 @@ typedef struct {
 	uint32_t physical_addr;
 } page_directory_t;
 
-page_directory_t* kernel_directory;
-page_directory_t* current_directory;
-
 void init_paging();
 void switch_page_directory(page_directory_t* dir);
 page_t* get_page(uint32_t virt_addr, int create_table, page_directory_t* dir);

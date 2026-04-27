@@ -1,12 +1,13 @@
 #include "ordered_array.h"
 
+#include "function.h"
 #include "mem.h"
 
 ordered_array_t create_ordered_array(size_t max_size,
 									 less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (void*)kmalloc(max_size * sizeof(type_t));
-	memory_set((uint8_t)array.array, 0, max_size * sizeof(type_t));
+	memory_set((uint8_t*)array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
@@ -17,7 +18,7 @@ ordered_array_t place_ordered_array(void* address, size_t max_size,
 									less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (type_t*)address;
-	memory_set((uint8_t)array.array, 0, max_size * sizeof(type_t));
+	memory_set((uint8_t*)array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
@@ -60,9 +61,7 @@ void remove_ordered_array(size_t i, ordered_array_t* array) {
 	array->cur_size--;
 }
 
-void destroy_ordered_array(ordered_array_t* array) {
-	// kfree(array->array);
-}
+void destroy_ordered_array(ordered_array_t* array) { kfree(array->array); }
 
 int8_t standart_less_than_function(type_t a, type_t b) {
 	return (a < b) ? 1 : 0;
