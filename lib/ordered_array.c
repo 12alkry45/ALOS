@@ -27,7 +27,7 @@ ordered_array_t place_ordered_array(void* address, size_t max_size,
 
 void insert_ordered_array(type_t item, ordered_array_t* array) {
 	ASSERT(array->less_than);
-	uint32_t iterator;
+	uint32_t iterator = 0;
 	while (iterator < array->cur_size &&
 		   array->less_than(array->array[iterator], item)) {
 		iterator++;

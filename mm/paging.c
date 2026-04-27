@@ -8,7 +8,9 @@
 #include <lib/string.h>
 
 #include "frame.h"
+#include "mm/kheap.h"
 
+extern heap_t* kheap;
 extern uint32_t free_memory_addr;
 
 page_directory_t* current_directory = NULL;
@@ -26,13 +28,26 @@ void init_paging() {
 	memory_set((uint8_t*)kernel_directory, 0, sizeof(page_directory_t));
 	current_directory = kernel_directory;
 
+	for (int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
+		 i += 0x1000) {
+		get_page(i, 1, kernel_directory);
+	}
+
 	uint32_t addr = 0;
-	while (addr < free_memory_addr) {
-		alloc_page(get_page(addr, 1, kernel_directory), 0, 0);
+	while (addr <= free_memory_addr) {
+		alloc_page(get_page(addr, 1, kernel_directory), 0, 1);
 		addr += 0x1000;
 	}
+
+	for (int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
+		 i += 0x1000) {
+		alloc_page(get_page(i, 1, kernel_directory), 0, 1);
+	}
+
 	register_interrupt_handler(14, page_fault_handler);
 	switch_page_directory(kernel_directory);
+	kheap = create_heap(KHEAP_START, KHEAP_START + KHEAP_INITIALISE_SIZE,
+						0xCFFFF000, false, false);
 }
 
 void alloc_page(page_t* page, int is_user_mode, int is_writeable) {
