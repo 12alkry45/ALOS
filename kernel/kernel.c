@@ -14,9 +14,9 @@ void user_input(char* input) {
 		uint32_t phys_addr;
 		uint32_t page = kernel_malloc(1000, 1, &phys_addr);
 		char page_str[16] = "";
-		hex_to_ascii(page, page_str);
+		atoi(page, page_str, 16);
 		char phys_str[16] = "";
-		hex_to_ascii(phys_addr, phys_str);
+		atoi(phys_addr, phys_str, 16);
 		kernel_print("Page: ");
 		kernel_print(page_str);
 		kernel_print(", physical address: ");

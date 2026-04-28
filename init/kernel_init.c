@@ -12,7 +12,7 @@ void kernel_main() {
 	uint32_t a = kmalloc(8);
 	kernel_print("a: ");
 	char str[16];
-	hex_to_ascii(a, str);
+	atoi(a, str, 16);
 	kernel_print(str);
 	kernel_print("\n");
 
@@ -21,11 +21,11 @@ void kernel_main() {
 	uint32_t b = kmalloc(8);
 	uint32_t c = kmalloc(8);
 	kernel_print("b: ");
-	hex_to_ascii(b, str);
+	atoi(b, str, 16);
 	kernel_print(str);
 	kernel_print("\n");
 	kernel_print("c: ");
-	hex_to_ascii(c, str);
+	atoi(c, str, 16);
 	kernel_print(str);
 	kernel_print("\n");
 
@@ -33,7 +33,7 @@ void kernel_main() {
 	kfree((uint32_t*)b);
 	uint32_t d = kmalloc(12);
 	kernel_print("d: ");
-	hex_to_ascii(d, str);
+	atoi(d, str, 16);
 	kernel_print(str);
 	kernel_print("\n");
 

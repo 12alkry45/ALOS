@@ -1,6 +1,7 @@
 #include "paging.h"
 
 #include <arch/isr.h>
+#include <arch/memory.h>
 #include <arch/register.h>
 #include <drivers/screen.h>
 #include <lib/mem.h>
@@ -25,10 +26,10 @@ void init_paging() {
 
 	kernel_directory =
 		(page_directory_t*)kmalloc_aligned(sizeof(page_directory_t));
-	memory_set((uint8_t*)kernel_directory, 0, sizeof(page_directory_t));
+	memset((void*)kernel_directory, 0, sizeof(page_directory_t));
 	current_directory = kernel_directory;
 
-	for (int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
+	for (unsigned int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
 		 i += 0x1000) {
 		get_page(i, 1, kernel_directory);
 	}
@@ -39,7 +40,7 @@ void init_paging() {
 		addr += 0x1000;
 	}
 
-	for (int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
+	for (unsigned int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;
 		 i += 0x1000) {
 		alloc_page(get_page(i, 1, kernel_directory), 0, 1);
 	}
@@ -89,7 +90,7 @@ page_t* get_page(uint32_t address, int make, page_directory_t* dir) {
 		dir->virtual_table[table_idx] =
 			(page_table_t*)kmalloc_aligned_with_phys(sizeof(page_table_t),
 													 &phys);
-		memory_set((uint8_t*)dir->virtual_table[table_idx], 0, 0x1000);
+		memset((void*)dir->virtual_table[table_idx], 0, 0x1000);
 		dir->physical_table[table_idx] = phys | 0x7;  // P, RW, US.
 		return &dir->virtual_table[table_idx]->pages[address % 1024];
 	} else {
@@ -120,7 +121,7 @@ static void page_fault_handler(registers_t* r) {
 	}
 	kernel_print(") at 0x");
 	char str[32];
-	hex_to_ascii(faulting_address, str);
+	atoi(faulting_address, str, 16);
 	kernel_print(str);
 	kernel_print("\n");
 	PANIC("PAGE FAULT!");

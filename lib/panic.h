@@ -13,7 +13,7 @@ NORETURN void panic(const char* msg);
 #define PANIC(msg)                            \
 	do {                                      \
 		char line_buf[16];                    \
-		int_to_ascii(__LINE__, line_buf);     \
+		atoi(__LINE__, line_buf, 10);         \
 		kernel_print("KERNEL PANIC\n");       \
 		kernel_print("FILE: " __FILE__ "\n"); \
 		kernel_print("LINE: ");               \

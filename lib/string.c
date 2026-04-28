@@ -1,49 +1,35 @@
 #include "string.h"
 
-void int_to_ascii(int n, char str[]) {
-	int i = 0, sign = n;
-	if (sign < 0) n = -n;
-
+void atoi(int value, char* str, int base) {
+	if (base < 2 || base > 36) {
+		*str = '\0';
+	}
+	char* letter = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int sign = value, i = 0;
+	unsigned int v = (unsigned int)value;
+	if (sign < 0 && base == 10) v = (unsigned int)-value;
 	do {
-		str[i++] = n % 10 + '0';
-	} while ((n /= 10) > 0);
-
-	if (sign < 0) str[i++] = '-';
-	str[i] = '\0';
-
+		str[i++] = letter[v % base];
+	} while ((v /= base) > 0);
+	if (sign < 0 && base == 10) str[i++] = '-';
+	str[i++] = '\0';
 	reverse(str);
 }
 
-void hex_to_ascii(int n, char str[]) {
-	str[0] = '\0';
-	append(str, '0');
-	append(str, 'x');
-	int digit = 0;
-	char skip_zero = 1;
-	for (int i = 28; i >= 0; i -= 4) {
-		digit = (n >> i) & 0xF;
-		if (digit == 0 && skip_zero == 1) continue;
-		skip_zero = 0;
-		if (digit >= 0xA) {
-			append(str, digit - 0xA + 'A');
-		} else {
-			append(str, digit + '0');
-		}
-	}
-}
-
 void reverse(char str[]) {
-	char c = 0;
-	for (int i = 0, j = strlen(str) - 1; i < j; i++, j--) {
-		c = str[i];
-		str[i] = str[j - i];
-		str[j - i] = c;
+	int i = 0, j = strlen(str) - 1;
+	while (i < j) {
+		char c = str[i];
+		str[i] = str[j];
+		str[j] = c;
+		i++;
+		j--;
 	}
 }
 
 int strlen(char str[]) {
 	int i = 0;
-	while (str[i] != 0) ++i;
+	while (str[i] != '\0') ++i;
 	return i;
 }
 

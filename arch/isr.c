@@ -133,7 +133,7 @@ void isr_handler(registers_t* r) {
 	} else {
 		kernel_print("\nINTERUPTION: ");
 		char str[3];
-		int_to_ascii(r->int_num, str);
+		atoi(r->int_num, str, 10);
 		kernel_print(str);
 		kernel_print("\n");
 	}

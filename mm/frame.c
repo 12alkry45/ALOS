@@ -1,5 +1,6 @@
 #include "frame.h"
 
+#include <arch/memory.h>
 #include <lib/bitmap.h>
 #include <lib/mem.h>
 #include <lib/panic.h>
@@ -34,7 +35,7 @@ void init_frames() {
 	frames_num = MEM_SIZE;
 	uint32_t bitmap_size = get_bitmap_frames_size();
 	frames = (bitmap_word_t*)kmalloc(bitmap_size);
-	memory_set((uint8_t*)frames, 0, bitmap_size);
+	memset((void*)frames, 0, bitmap_size);
 }
 
 uint32_t alloc_frame() {

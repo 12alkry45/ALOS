@@ -1,13 +1,15 @@
 #include "ordered_array.h"
 
+#include <arch/memory.h>
+
 #include "function.h"
-#include "mem.h"
+#include "lib/mem.h"
 
 ordered_array_t create_ordered_array(size_t max_size,
 									 less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (void*)kmalloc(max_size * sizeof(type_t));
-	memory_set((uint8_t*)array.array, 0, max_size * sizeof(type_t));
+	memset((void*)array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
@@ -18,7 +20,7 @@ ordered_array_t place_ordered_array(void* address, size_t max_size,
 									less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (type_t*)address;
-	memory_set((uint8_t*)array.array, 0, max_size * sizeof(type_t));
+	memset((void*)array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
@@ -56,7 +58,8 @@ type_t look_up_ordered_array(size_t i, ordered_array_t* array) {
 void remove_ordered_array(size_t i, ordered_array_t* array) {
 	ASSERT(i < array->cur_size);
 	while (i < array->cur_size) {
-		array->array[i] = array->array[++i];
+		array->array[i] = array->array[i + 1];
+		++i;
 	}
 	array->cur_size--;
 }

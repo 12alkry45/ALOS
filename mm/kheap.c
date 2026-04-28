@@ -48,8 +48,9 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 		expand_heap(old_length + new_size, heap);
 		int32_t new_length = heap->end_address - heap->start_address;
 		iterator = 0;
-		uint32_t idx = -1, value = 0x0;
-		while (iterator < heap->index.cur_size) {
+		int32_t idx = -1;
+		uint32_t value = 0x0;
+		while (iterator < (int32_t)heap->index.cur_size) {
 			uint32_t cur_block =
 				(uint32_t)look_up_ordered_array(iterator, &heap->index);
 			if (cur_block > value) {
@@ -226,6 +227,7 @@ static uint32_t contract_heap(size_t new_size, heap_t* heap) {
 		addr -= PAGE_SIZE;
 	}
 	heap->end_address = heap->start_address + new_size;
+	return heap->end_address;
 }
 
 static int8_t less_than_header_t(void* a, void* b) {
@@ -233,7 +235,7 @@ static int8_t less_than_header_t(void* a, void* b) {
 }
 
 static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
-	uint32_t iterator = 0;
+	int32_t iterator = 0;
 	while (iterator < heap->index.cur_size) {
 		header_t* header =
 			(header_t*)look_up_ordered_array(iterator, &heap->index);
@@ -252,5 +254,5 @@ static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
 		}
 		iterator++;
 	}
-	return (iterator == heap->index.cur_size) ? -1 : iterator;
+	return (iterator == heap->index.cur_size) ? (int32_t)-1 : iterator;
 }

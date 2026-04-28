@@ -6,19 +6,6 @@
 extern heap_t* kheap;
 extern page_directory_t* kernel_directory;
 
-void memory_copy(uint8_t* source, uint8_t* dest, size_t nbytes) {
-	for (size_t i = 0; i < nbytes; ++i) {
-		*(dest + i) = *(source + i);
-	}
-}
-
-void memory_set(uint8_t* dest, uint8_t val, uint32_t len) {
-	uint8_t* temp = (uint8_t*)dest;
-	for (; len != 0; len--) {
-		*temp++ = val;
-	}
-}
-
 uint32_t free_memory_addr = 0x100000;
 
 uint32_t kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
@@ -26,7 +13,8 @@ uint32_t kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
 		void* addr = alloc(size, align != 0, kheap);
 		if (phys_addr != 0) {
 			page_t* page = get_page((uint32_t)addr, 0, kernel_directory);
-			*phys_addr = page->frame_addr * PAGE_SIZE + (uint32_t)addr & 0xFFF;
+			*phys_addr =
+				page->frame_addr * PAGE_SIZE + ((uint32_t)addr & 0xFFF);
 		}
 		return (uint32_t)addr;
 	} else {
