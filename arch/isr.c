@@ -2,6 +2,7 @@
 
 #include <drivers/keyboard.h>
 #include <drivers/screen.h>
+#include <lib/stdio.h>
 #include <lib/string.h>
 
 #include "idt.h"
@@ -131,11 +132,7 @@ void isr_handler(registers_t* r) {
 		isr_t handler = interupt_handlers[r->int_num];
 		handler(r);
 	} else {
-		kernel_print("\nINTERUPTION: ");
-		char str[3];
-		atoi(r->int_num, str, 10);
-		kernel_print(str);
-		kernel_print("\n");
+		printf("\nINTERUPTION: %d\n", r->int_num);
 	}
 }
 

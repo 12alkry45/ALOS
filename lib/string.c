@@ -1,6 +1,6 @@
 #include "string.h"
 
-void atoi(int value, char* str, int base) {
+void itoa(int value, char* str, int base) {
 	if (base < 2 || base > 36) {
 		*str = '\0';
 	}

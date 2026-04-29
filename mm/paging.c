@@ -6,6 +6,7 @@
 #include <drivers/screen.h>
 #include <lib/mem.h>
 #include <lib/panic.h>
+#include <lib/stdio.h>
 #include <lib/string.h>
 
 #include "frame.h"
@@ -106,23 +107,19 @@ static void page_fault_handler(registers_t* r) {
 	int usermode = r->err_code & 0x4;	 // Processor was in user-mode?
 	int reserved = r->err_code & 0x8;	 // Overwritten CPU-reserved bits?
 
-	kernel_print("Page fault! ( ");
+	printf("Page fault! ( ");
 	if (present) {
-		kernel_print("present ");
+		printf("present ");
 	}
 	if (writeable) {
-		kernel_print("read-only ");
+		printf("read-only ");
 	}
 	if (usermode) {
-		kernel_print("user-mode ");
+		printf("user-mode ");
 	}
 	if (reserved) {
-		kernel_print("reserved ");
+		printf("reserved ");
 	}
-	kernel_print(") at 0x");
-	char str[32];
-	atoi(faulting_address, str, 16);
-	kernel_print(str);
-	kernel_print("\n");
+	printf(") at %p\n", faulting_address);
 	PANIC("PAGE FAULT!");
 }

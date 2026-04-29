@@ -1,7 +1,7 @@
 #include <arch/isr.h>
 #include <drivers/screen.h>
 #include <lib/mem.h>
-#include <lib/string.h>
+#include <lib/stdio.h>
 #include <mm/paging.h>
 #include <stdint.h>
 
@@ -10,32 +10,19 @@ void kernel_main() {
 	irq_install();
 	clear_screen();
 	uint32_t a = kmalloc(8);
-	kernel_print("a: ");
-	char str[16];
-	atoi(a, str, 16);
-	kernel_print(str);
-	kernel_print("\n");
+	printf("a: %p\n", a);
 
 	init_paging();
 
 	uint32_t b = kmalloc(8);
 	uint32_t c = kmalloc(8);
-	kernel_print("b: ");
-	atoi(b, str, 16);
-	kernel_print(str);
-	kernel_print("\n");
-	kernel_print("c: ");
-	atoi(c, str, 16);
-	kernel_print(str);
-	kernel_print("\n");
+	printf("b: %p\n", b);
+	printf("c: %p\n", c);
 
 	kfree((uint32_t*)c);
 	kfree((uint32_t*)b);
 	uint32_t d = kmalloc(12);
-	kernel_print("d: ");
-	atoi(d, str, 16);
-	kernel_print(str);
-	kernel_print("\n");
+	printf("d: %p\n", d);
 
-	kernel_print("Type something... END to halt the CPU\n> ");
+	printf("Type something... END to halt the CPU\n> ");
 }
