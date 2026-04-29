@@ -27,7 +27,7 @@ void init_paging() {
 
 	kernel_directory =
 		(page_directory_t*)kmalloc_aligned(sizeof(page_directory_t));
-	memset((void*)kernel_directory, 0, sizeof(page_directory_t));
+	memset(kernel_directory, 0, sizeof(page_directory_t));
 	current_directory = kernel_directory;
 
 	for (unsigned int i = KHEAP_START; i < KHEAP_START + KHEAP_INITIALISE_SIZE;

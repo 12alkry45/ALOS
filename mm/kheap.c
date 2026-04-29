@@ -12,6 +12,8 @@ static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap);
 static int8_t less_than_header_t(void* a, void* b);
 static void expand_heap(size_t new_size, heap_t* heap);
 static uint32_t contract_heap(size_t new_size, heap_t* heap);
+static header_t* set_header(void* addr, size_t size, bool is_hole);
+static footer_t* set_footer(void* addr, header_t* header);
 
 heap_t* create_heap(uint32_t start, uint32_t end, uint32_t max, bool supervisor,
 					bool readonly) {
@@ -31,10 +33,7 @@ heap_t* create_heap(uint32_t start, uint32_t end, uint32_t max, bool supervisor,
 	heap->supervisor = supervisor;
 	heap->readonly = readonly;
 
-	header_t* hole = (header_t*)start;
-	hole->check = HEAP_MAGIC_NUM;
-	hole->is_hole = true;
-	hole->size = end - start;
+	header_t* hole = set_header((void*)start, end - start, true);
 	insert_ordered_array((void*)hole, &heap->index);
 	return heap;
 }
@@ -60,22 +59,15 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 			iterator++;
 		}
 		if (idx == -1) {
-			header_t* header = (header_t*)old_end_addr;
-			header->check = HEAP_MAGIC_NUM;
-			header->size = new_length - old_length;
-			header->is_hole = true;
-			footer_t* footer =
-				(footer_t*)(old_end_addr + header->size - sizeof(footer_t));
-			footer->check = HEAP_MAGIC_NUM;
-			footer->header = header;
+			header_t* header =
+				set_header((void*)old_end_addr, new_length - old_length, true);
+			set_footer((void*)(old_end_addr + header->size - sizeof(footer_t)),
+					   header);
 			insert_ordered_array((void*)header, &heap->index);
 		} else {
 			header_t* header = look_up_ordered_array(idx, &heap->index);
 			header->size += new_length - old_length;
-			footer_t* footer =
-				(footer_t*)((uint32_t)header + header->size - sizeof(footer_t));
-			footer->header = header;
-			footer->check = HEAP_MAGIC_NUM;
+			set_footer(header + header->size - sizeof(footer_t), header);
 		}
 		return alloc(size, align, heap);
 	}
@@ -91,42 +83,29 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 	if (align && (orig_hole_addr & 0xFFF)) {
 		uint32_t new_addr = orig_hole_addr + PAGE_SIZE -
 							(orig_hole_addr & 0xFFF) - sizeof(header_t);
-		header_t* hole_header = (header_t*)orig_hole_addr;
-		hole_header->check = HEAP_MAGIC_NUM;
-		hole_header->is_hole = true;
-		hole_header->size =
-			PAGE_SIZE - (orig_hole_addr & 0xFFF) - sizeof(header_t);
-		footer_t* hole_footer =
-			(footer_t*)((uint32_t)new_addr - sizeof(footer_t));
-		hole_footer->check = HEAP_MAGIC_NUM;
-		hole_footer->header = hole_header;
+		header_t* hole_header = set_header(
+			orig_hole_header,
+			PAGE_SIZE - (orig_hole_addr & 0xFFF) - sizeof(header_t), true);
+		set_footer((void*)(new_addr - sizeof(footer_t)), hole_header);
 		orig_hole_addr = new_addr;
 		orig_hole_size = orig_hole_size - hole_header->size;
 	} else {
 		remove_ordered_array(iterator, &heap->index);
 	}
 
-	header_t* block_header = (header_t*)orig_hole_addr;
-	block_header->check = HEAP_MAGIC_NUM;
-	block_header->is_hole = false;
-	block_header->size = new_size;
-	footer_t* block_footer =
-		(footer_t*)(orig_hole_addr + sizeof(header_t) + size);
-	block_footer->check = HEAP_MAGIC_NUM;
-	block_footer->header = block_header;
+	header_t* block_header = set_header((void*)orig_hole_addr, new_size, false);
+	set_footer((void*)(orig_hole_addr + sizeof(header_t) + size), block_header);
 
 	if (orig_hole_size - new_size > 0) {
-		header_t* hole_header = (header_t*)(orig_hole_addr + sizeof(header_t) +
-											size + sizeof(footer_t));
-		hole_header->check = HEAP_MAGIC_NUM;
-		hole_header->is_hole = true;
-		hole_header->size = orig_hole_size - new_size;
+		header_t* hole_header =
+			set_header((void*)(orig_hole_addr + sizeof(header_t) + size +
+							   sizeof(footer_t)),
+					   orig_hole_size - new_size, true);
 		footer_t* hole_footer =
 			(footer_t*)((uint32_t)hole_header + orig_hole_size - new_size -
 						sizeof(footer_t));
 		if ((uint32_t)hole_footer < heap->end_address) {
-			hole_footer->check = HEAP_MAGIC_NUM;
-			hole_footer->header = hole_header;
+			set_footer(hole_footer, hole_header);
 		}
 		insert_ordered_array((void*)hole_header, &heap->index);
 	}
@@ -255,4 +234,19 @@ static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
 		iterator++;
 	}
 	return (iterator == heap->index.cur_size) ? (int32_t)-1 : iterator;
+}
+
+static header_t* set_header(void* addr, size_t size, bool is_hole) {
+	header_t* header = (header_t*)addr;
+	header->check = HEAP_MAGIC_NUM;
+	header->is_hole = is_hole;
+	header->size = size;
+	return header;
+}
+
+static footer_t* set_footer(void* addr, header_t* header) {
+	footer_t* footer = (footer_t*)addr;
+	footer->check = HEAP_MAGIC_NUM;
+	footer->header = header;
+	return footer;
 }
