@@ -8,8 +8,8 @@
 ordered_array_t create_ordered_array(size_t max_size,
 									 less_than_function_t less_than) {
 	ordered_array_t array;
-	array.array = (void*)kmalloc(max_size * sizeof(type_t));
-	memset((void*)array.array, 0, max_size * sizeof(type_t));
+	array.array = kmalloc(max_size * sizeof(type_t));
+	memset(array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
@@ -20,7 +20,7 @@ ordered_array_t place_ordered_array(void* address, size_t max_size,
 									less_than_function_t less_than) {
 	ordered_array_t array;
 	array.array = (type_t*)address;
-	memset((void*)array.array, 0, max_size * sizeof(type_t));
+	memset(array.array, 0, max_size * sizeof(type_t));
 	array.cur_size = 0;
 	array.max_size = max_size;
 	array.less_than = less_than;
