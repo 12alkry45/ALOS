@@ -1,4 +1,4 @@
-#include "bitmap.h"
+#include <lib/bitmap.h>
 
 size_t bitmap_find_first_zero(const bitmap_word_t* bitmap, size_t bit_num) {
 	for (size_t i = 0; i < BITMAP_WORDS(bit_num); ++i) {

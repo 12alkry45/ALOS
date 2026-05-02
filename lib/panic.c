@@ -1,6 +1,5 @@
-#include "panic.h"
-
-#include "stdio.h"
+#include <lib/panic.h>
+#include <lib/stdio.h>
 
 NORETURN void panic(const char* msg, const char* file, int line) {
 	__asm__ __volatile__("cli");

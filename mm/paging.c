@@ -1,5 +1,3 @@
-#include "paging.h"
-
 #include <arch/isr.h>
 #include <arch/memory.h>
 #include <arch/register.h>
@@ -8,9 +6,9 @@
 #include <lib/panic.h>
 #include <lib/stdio.h>
 #include <lib/string.h>
-
-#include "frame.h"
-#include "mm/kheap.h"
+#include <mm/frame.h>
+#include <mm/kheap.h>
+#include <mm/paging.h>
 
 extern heap_t* kheap;
 extern uint32_t free_memory_addr;

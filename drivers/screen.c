@@ -1,7 +1,6 @@
-#include "screen.h"
-
 #include <arch/memory.h>
 #include <arch/ports.h>
+#include <drivers/screen.h>
 
 static int32_t get_cursor_offset();
 static void set_cursor_offset(int32_t offset);

@@ -5,7 +5,7 @@ GDB = $(CROSS)gdb
 AR = $(CROSS)ar
 
 CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
-CFLAGS += -I.
+CFLAGS += -I include
 CFLAGS += -MMD -MP
 
 LDFLAGS = -Ttext 0x1000

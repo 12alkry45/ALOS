@@ -1,9 +1,8 @@
-#include "frame.h"
-
 #include <arch/memory.h>
 #include <lib/bitmap.h>
 #include <lib/mem.h>
 #include <lib/panic.h>
+#include <mm/frame.h>
 
 bitmap_word_t* frames;
 uint32_t frames_num;

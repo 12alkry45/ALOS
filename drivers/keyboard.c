@@ -1,12 +1,10 @@
-#include "keyboard.h"
-
 #include <arch/isr.h>
 #include <arch/ports.h>
+#include <drivers/keyboard.h>
+#include <drivers/screen.h>
 #include <kernel/kernel.h>
 #include <lib/function.h>
 #include <lib/string.h>
-
-#include "screen.h"
 
 #define BACKSPACE 0x0E
 #define ENTER 0x1C

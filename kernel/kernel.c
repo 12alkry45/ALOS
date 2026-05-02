@@ -1,6 +1,5 @@
-#include "kernel.h"
-
 #include <drivers/screen.h>
+#include <kernel/kernel.h>
 #include <lib/mem.h>
 #include <lib/stdio.h>
 #include <lib/string.h>

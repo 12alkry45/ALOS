@@ -1,9 +1,7 @@
-#include "ordered_array.h"
-
 #include <arch/memory.h>
-
-#include "function.h"
-#include "lib/mem.h"
+#include <lib/function.h>
+#include <lib/mem.h>
+#include <lib/ordered_array.h>
 
 ordered_array_t create_ordered_array(size_t max_size,
 									 less_than_function_t less_than) {

@@ -1,13 +1,11 @@
-#include "isr.h"
-
+#include <arch/idt.h>
+#include <arch/isr.h>
+#include <arch/ports.h>
+#include <arch/timer.h>
 #include <drivers/keyboard.h>
 #include <drivers/screen.h>
 #include <lib/stdio.h>
 #include <lib/string.h>
-
-#include "idt.h"
-#include "ports.h"
-#include "timer.h"
 
 #define PORT_PIC_CTRL_MASTER 0x20
 #define PORT_PIC_CTRL_SLAVE 0xA0

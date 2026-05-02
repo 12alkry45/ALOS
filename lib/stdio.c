@@ -1,8 +1,6 @@
-#include "stdio.h"
-
 #include <drivers/screen.h>
-
-#include "lib/string.h"
+#include <lib/stdio.h>
+#include <lib/string.h>
 
 int printf(const char* fmt, ...) {
 	char buf[1024];

@@ -1,4 +1,4 @@
-#include "string.h"
+#include <lib/string.h>
 
 void itoa(int value, char* str, int base) {
 	if (base < 2 || base > 36) {

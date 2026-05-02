@@ -1,9 +1,7 @@
-#include "kheap.h"
-
 #include <lib/function.h>
 #include <lib/mem.h>
-
-#include "mm/paging.h"
+#include <mm/kheap.h>
+#include <mm/paging.h>
 
 heap_t* kheap;
 extern page_directory_t* kernel_directory;
