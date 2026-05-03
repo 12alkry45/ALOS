@@ -1,11 +1,10 @@
-#include "keyboard.h"
-
-#include "../cpu/isr.h"
-#include "../cpu/ports.h"
-#include "../kernel/kernel.h"
-#include "../lib/function.h"
-#include "../lib/string.h"
-#include "screen.h"
+#include <arch/isr.h>
+#include <arch/ports.h>
+#include <drivers/keyboard.h>
+#include <drivers/screen.h>
+#include <kernel/kernel.h>
+#include <lib/function.h>
+#include <lib/string.h>
 
 #define BACKSPACE 0x0E
 #define ENTER 0x1C
@@ -29,7 +28,7 @@ const char scancode_ascii[] = {
 	'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', '?', '\\', 'Z',
 	'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', '?', '?',	'?', ' '};
 
-static void keyboard_callback(registers_t *r) {
+static void keyboard_callback(registers_t* r) {
 	uint8_t scancode = port_byte_in(PORT_KEYBOARD_READ);
 	if (scancode > SCANCODE_MAX) return;
 	if (scancode == BACKSPACE) {

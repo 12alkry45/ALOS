@@ -1,6 +1,5 @@
-#include "idt.h"
-
-#include "type.h"
+#include <arch/idt.h>
+#include <arch/type.h>
 
 idt_gate_t idt[IDT_ENTRIES];
 idt_register_t idt_reg;

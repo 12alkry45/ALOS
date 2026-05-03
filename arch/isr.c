@@ -1,11 +1,11 @@
-#include "isr.h"
-
-#include "../drivers/keyboard.h"
-#include "../drivers/screen.h"
-#include "../lib/string.h"
-#include "idt.h"
-#include "ports.h"
-#include "timer.h"
+#include <arch/idt.h>
+#include <arch/isr.h>
+#include <arch/ports.h>
+#include <arch/timer.h>
+#include <drivers/keyboard.h>
+#include <drivers/screen.h>
+#include <lib/stdio.h>
+#include <lib/string.h>
 
 #define PORT_PIC_CTRL_MASTER 0x20
 #define PORT_PIC_CTRL_SLAVE 0xA0
@@ -126,13 +126,12 @@ char* exception_messages[] = {"Division By Zero",
 							  "Reserved"};
 
 void isr_handler(registers_t* r) {
-	kernel_print("Recieved interrupt:");
-	char s[3];
-	int_to_ascii(r->int_num, s);
-	kernel_print(s);
-	kernel_print("\n");
-	kernel_print(exception_messages[r->int_num]);
-	kernel_print("\n");
+	if (interupt_handlers[r->int_num] != 0) {
+		isr_t handler = interupt_handlers[r->int_num];
+		handler(r);
+	} else {
+		printf("\nINTERUPTION: %d\n", r->int_num);
+	}
 }
 
 void irq_handler(registers_t* r) {

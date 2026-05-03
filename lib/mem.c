@@ -1,27 +1,43 @@
-#include "mem.h"
+#include <lib/mem.h>
+#include <mm/kheap.h>
+#include <mm/paging.h>
 
-void memory_copy(uint8_t* source, uint8_t* dest, size_t nbytes) {
-	for (size_t i = 0; i < nbytes; ++i) {
-		*(dest + i) = *(source + i);
+extern heap_t* kheap;
+extern page_directory_t* kernel_directory;
+
+uint32_t free_memory_addr = 0x100000;
+
+void* kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
+	if (kheap != 0) {
+		void* addr = alloc(size, align != 0, kheap);
+		if (phys_addr != 0) {
+			page_t* page = get_page((uint32_t)addr, 0, kernel_directory);
+			*phys_addr =
+				page->frame_addr * PAGE_SIZE + ((uint32_t)addr & 0xFFF);
+		}
+		return addr;
+	} else {
+		if (align == 1 && (free_memory_addr & 0xFFF)) {
+			free_memory_addr &= 0xFFFFF000;
+			free_memory_addr += 0x1000;
+		}
+		if (phys_addr) *phys_addr = free_memory_addr;
+		void* return_addr = (void*)free_memory_addr;
+		free_memory_addr += size;
+		return return_addr;
 	}
 }
 
-void memory_set(uint8_t* dest, uint8_t val, uint32_t len) {
-	uint8_t* temp = (uint8_t*)dest;
-	for (; len != 0; len--) {
-		*temp++ = val;
-	}
+void kfree(void* p) { free(p, kheap); }
+
+void* kmalloc(size_t size) { return kernel_malloc(size, 0, NULL); }
+
+void* kmalloc_aligned(size_t size) { return kernel_malloc(size, 1, NULL); }
+
+void* kmalloc_with_phys(size_t size, uint32_t* phys_addr) {
+	return kernel_malloc(size, 0, phys_addr);
 }
 
-uint32_t free_memory_addr = 0x10000;
-
-uint32_t kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
-	if (align == 1 && (free_memory_addr & 0xFFF)) {
-		free_memory_addr &= 0xFFFFF000;
-		free_memory_addr += 0x1000;
-	}
-	if (phys_addr) *phys_addr = free_memory_addr;
-	uint32_t return_addr = free_memory_addr;
-	free_memory_addr += size;
-	return return_addr;
+void* kmalloc_aligned_with_phys(size_t size, uint32_t* phys_addr) {
+	return kernel_malloc(size, 1, phys_addr);
 }
