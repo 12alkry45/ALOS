@@ -43,6 +43,7 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 		int32_t old_length = heap->end_address - heap->start_address;
 		int32_t old_end_addr = heap->end_address;
 		expand_heap(old_length + new_size, heap);
+
 		int32_t new_length = heap->end_address - heap->start_address;
 		iterator = 0;
 		int32_t idx = -1;
@@ -71,30 +72,36 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 		}
 		return alloc(size, align, heap);
 	}
+
 	header_t* orig_hole_header =
 		(header_t*)look_up_ordered_array(iterator, &heap->index);
 	uint32_t orig_hole_addr = (uint32_t)orig_hole_header;
 	uint32_t orig_hole_size = orig_hole_header->size;
+
 	if (orig_hole_size - new_size < sizeof(header_t) + sizeof(footer_t)) {
 		size += orig_hole_size - new_size;
 		new_size = orig_hole_size;
 	}
 
-	remove_ordered_array(iterator, &heap->index);
 	if (align && (orig_hole_addr & 0xFFF)) {
 		uint32_t offset =
 			PAGE_SIZE - (orig_hole_addr & 0xFFF) - sizeof(header_t);
 		uint32_t new_addr = orig_hole_addr + offset;
 		header_t* hole_header = set_header(orig_hole_header, offset, true);
 		set_footer((void*)(new_addr - sizeof(footer_t)), hole_header);
+
+		remove_ordered_array(iterator, &heap->index);
 		insert_ordered_array(hole_header, &heap->index);
 
 		orig_hole_addr = new_addr;
 		orig_hole_size = orig_hole_size - hole_header->size;
+	} else {
+		remove_ordered_array(iterator, &heap->index);
 	}
 
 	header_t* block_header = set_header((void*)orig_hole_addr, new_size, false);
-	set_footer((void*)(orig_hole_addr + sizeof(header_t) + size), block_header);
+	set_footer((void*)(orig_hole_addr + block_header->size - sizeof(footer_t)),
+			   block_header);
 
 	if (orig_hole_size - new_size > 0) {
 		header_t* hole_header = set_header((void*)(orig_hole_addr + new_size),
@@ -112,13 +119,14 @@ void* alloc(size_t size, bool align, heap_t* heap) {
 
 void free(void* p, heap_t* heap) {
 	if (p == 0) return;
+
 	header_t* header = (header_t*)((uint32_t)p - sizeof(header_t));
 	footer_t* footer =
 		(footer_t*)((uint32_t)header + header->size - sizeof(footer_t));
+
 	ASSERT(header->check == HEAP_MAGIC_NUM);
 	ASSERT(footer->check == HEAP_MAGIC_NUM);
 	header->is_hole = true;
-	bool do_add = true;
 	// unify left
 	footer_t* test_footer;
 	if ((uint32_t)header > heap->start_address) {
@@ -126,18 +134,15 @@ void free(void* p, heap_t* heap) {
 		if (test_footer->check == HEAP_MAGIC_NUM &&
 			test_footer->header->is_hole) {
 			uint32_t cache_size = header->size;
-			uint32_t iterator = 0;
-			while ((iterator < heap->index.cur_size) &&
-				   (look_up_ordered_array(iterator, &heap->index) !=
-					(void*)test_footer->header)) {
-				iterator++;
-			}
+
+			int32_t iterator =
+				find_item_in_ordered_array(test_footer->header, &heap->index);
 			ASSERT(iterator < heap->index.cur_size);
 			remove_ordered_array(iterator, &heap->index);
+
 			header = test_footer->header;
 			footer->header = header;
 			header->size += cache_size;
-			do_add = false;
 		}
 	}
 	// unify right
@@ -148,40 +153,32 @@ void free(void* p, heap_t* heap) {
 		test_footer = (footer_t*)((uint32_t)test_header + test_header->size -
 								  sizeof(footer_t));
 		footer = test_footer;
-		uint32_t iterator = 0;
-		while ((iterator < heap->index.cur_size) &&
-			   (look_up_ordered_array(iterator, &heap->index) !=
-				(void*)test_header)) {
-			iterator++;
-		}
+		footer->header = header;
+
+		int32_t iterator =
+			find_item_in_ordered_array(test_header, &heap->index);
 		ASSERT(iterator < heap->index.cur_size);
 		remove_ordered_array(iterator, &heap->index);
 	}
 
 	if ((uint32_t)footer + sizeof(footer_t) == heap->end_address) {
 		uint32_t old_length = heap->end_address - heap->start_address;
-		uint32_t new_end =
+		uint32_t new_length =
 			contract_heap((uint32_t)header - heap->start_address, heap);
-		uint32_t new_length = new_end - heap->start_address;
 		if (header->size > old_length - new_length) {
 			header->size -= old_length - new_length;
-			footer =
-				(footer_t*)((uint32_t)header + header->size - sizeof(footer_t));
-			footer->check = HEAP_MAGIC_NUM;
-			footer->header = header;
+			set_footer(
+				(void*)((uint32_t)header + header->size - sizeof(footer_t)),
+				header);
 		} else {
-			uint32_t iterator = 0;
-			while ((iterator < heap->index.cur_size) &&
-				   (look_up_ordered_array(iterator, &heap->index) !=
-					(void*)test_header)) {
-				iterator++;
-			}
+			uint32_t iterator =
+				find_item_in_ordered_array(test_header, &heap->index);
 			if (iterator < heap->index.cur_size) {
 				remove_ordered_array(iterator, &heap->index);
 			}
 		}
 	}
-	if (do_add) insert_ordered_array((void*)header, &heap->index);
+	insert_ordered_array((void*)header, &heap->index);
 }
 
 static void expand_heap(size_t new_size, heap_t* heap) {
@@ -190,7 +187,8 @@ static void expand_heap(size_t new_size, heap_t* heap) {
 		new_size &= 0xFFFFF000;
 		new_size += 0x1000;
 	}
-	ASSERT(heap->start_address + new_size < heap->max_address);
+	ASSERT(heap->start_address + new_size <= heap->max_address);
+
 	size_t old_size = heap->end_address - heap->start_address;
 	size_t addr = heap->start_address + old_size;
 	while (addr < heap->start_address + new_size) {
@@ -207,7 +205,12 @@ static uint32_t contract_heap(size_t new_size, heap_t* heap) {
 		new_size &= 0xFFFFF000;
 		new_size += 0x1000;
 	}
-	if (new_size < HEAP_MIN_SIZE) new_size = HEAP_MIN_SIZE;
+
+	size_t min_data_size =
+		KHEAP_INITIALISE_SIZE - (HEAP_INDEX_SIZE * sizeof(type_t));
+	if (new_size < min_data_size) {
+		new_size = min_data_size;
+	}
 	size_t old_size = heap->end_address - heap->start_address;
 	size_t addr = heap->start_address + old_size - 0x1000;
 	while (addr > heap->start_address + new_size) {
@@ -215,7 +218,7 @@ static uint32_t contract_heap(size_t new_size, heap_t* heap) {
 		addr -= PAGE_SIZE;
 	}
 	heap->end_address = heap->start_address + new_size;
-	return heap->end_address;
+	return new_size;
 }
 
 static int8_t less_than_header_t(void* a, void* b) {
@@ -234,7 +237,7 @@ static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
 				offset = PAGE_SIZE - (location + sizeof(header_t)) % PAGE_SIZE;
 			}
 			size_t hole_size = header->size - offset;
-			if (hole_size >= size + sizeof(footer_t)) {
+			if (hole_size >= size) {
 				break;
 			}
 		} else if (header->size >= size) {

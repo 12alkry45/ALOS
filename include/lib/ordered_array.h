@@ -16,13 +16,15 @@ typedef struct {
 
 int8_t standart_less_than_function(type_t a, type_t b);
 
-ordered_array_t create_ordered_array(size_t max_size, less_than_function_t less_than);
+ordered_array_t create_ordered_array(size_t max_size,
+									 less_than_function_t less_than);
 ordered_array_t place_ordered_array(void* address, size_t max_size,
-						 less_than_function_t less_than);
+									less_than_function_t less_than);
 
 void destroy_ordered_array(ordered_array_t* array);
 void insert_ordered_array(type_t item, ordered_array_t* array);
 type_t look_up_ordered_array(size_t i, ordered_array_t* array);
 void remove_ordered_array(size_t i, ordered_array_t* array);
+int32_t find_item_in_ordered_array(type_t item, ordered_array_t* array);
 
 #endif

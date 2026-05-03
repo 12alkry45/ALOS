@@ -37,7 +37,7 @@ void insert_ordered_array(type_t item, ordered_array_t* array) {
 		array->array[array->cur_size++] = item;
 	} else {
 		type_t buf_item = array->array[iterator];
-		array->array[iterator] = buf_item;
+		array->array[iterator] = item;
 		while (iterator < array->cur_size) {
 			iterator++;
 			type_t swap_item = array->array[iterator];
@@ -46,6 +46,17 @@ void insert_ordered_array(type_t item, ordered_array_t* array) {
 		}
 		array->cur_size++;
 	}
+}
+
+int32_t find_item_in_ordered_array(type_t item, ordered_array_t* array) {
+	uint32_t iterator = 0;
+	while (iterator < array->cur_size) {
+		if (array->array[iterator] == item) {
+			return (int32_t)iterator;
+		}
+		iterator++;
+	}
+	return -1;
 }
 
 type_t look_up_ordered_array(size_t i, ordered_array_t* array) {
