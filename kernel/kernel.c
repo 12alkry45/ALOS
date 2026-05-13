@@ -11,7 +11,7 @@ void user_input(char* input) {
 	} else if (strcmp(input, "LS") == 0) {
 		printf("No file system here:)\n> ");
 	} else if (strcmp(input, "PAGE") == 0) {
-		uint32_t* phys_addr;
+		uint32_t* phys_addr = NULL;
 		uint32_t* page = (uint32_t*)kmalloc_aligned_with_phys(1000, phys_addr);
 		printf("Page: %p, physical addr: %p\n> ", page, phys_addr);
 	} else {

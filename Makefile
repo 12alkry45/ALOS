@@ -1,10 +1,10 @@
-CROSS = /home/alesha/opt/cross/bin/i686-elf-
+CROSS = ~/opt/cross/bin/i686-elf-
 CC = $(CROSS)gcc
 LD = $(CROSS)ld
 GDB = $(CROSS)gdb
 AR = $(CROSS)ar
 
-CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
+CFLAGS = -O0 -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
 CFLAGS += -I include
 CFLAGS += -MMD -MP
 
@@ -78,7 +78,7 @@ kernel.dis: $(KERNEL_BIN)
 	ndisasm -b 32 $< > $@
 
 debug: $(OS_IMAGE) $(KERNEL_ELF)
-	qemu-system-i386 -s -fda $(OS_IMAGE) -d guest_errors,int &
+	qemu-system-i386 -s -S -fda $(OS_IMAGE) -d guest_errors,int &
 	$(GDB) -ex "target remote localhost:1234" -ex "symbol-file $(KERNEL_ELF)"
 
 clean:

@@ -137,7 +137,8 @@ void free(void* p, heap_t* heap) {
 
 			int32_t iterator =
 				find_item_in_ordered_array(test_footer->header, &heap->index);
-			ASSERT(iterator < heap->index.cur_size);
+			ASSERT(iterator >= 0);
+			ASSERT((uint32_t)iterator < heap->index.cur_size);
 			remove_ordered_array(iterator, &heap->index);
 
 			header = test_footer->header;
@@ -157,7 +158,8 @@ void free(void* p, heap_t* heap) {
 
 		int32_t iterator =
 			find_item_in_ordered_array(test_header, &heap->index);
-		ASSERT(iterator < heap->index.cur_size);
+		ASSERT(iterator >= 0);
+		ASSERT((uint32_t)iterator < heap->index.cur_size);
 		remove_ordered_array(iterator, &heap->index);
 	}
 
@@ -227,7 +229,7 @@ static int8_t less_than_header_t(void* a, void* b) {
 
 static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
 	int32_t iterator = 0;
-	while (iterator < heap->index.cur_size) {
+	while ((uint32_t)iterator < heap->index.cur_size) {
 		header_t* header =
 			(header_t*)look_up_ordered_array(iterator, &heap->index);
 		if (align) {
@@ -245,7 +247,8 @@ static int32_t find_smallest_hole(size_t size, bool align, heap_t* heap) {
 		}
 		iterator++;
 	}
-	return (iterator == heap->index.cur_size) ? (int32_t)-1 : iterator;
+	return ((uint32_t)iterator == heap->index.cur_size) ? (int32_t)-1
+														: iterator;
 }
 
 static header_t* set_header(void* addr, size_t size, bool is_hole) {
