@@ -12,7 +12,7 @@ LDFLAGS = -Ttext 0x1000
 
 BUILD_DIR = build
 
-C_DIRS = kernel drivers arch lib mm init include test
+C_DIRS = kernel drivers arch lib mm init include test fs
 C_SOURCES = $(foreach dir,$(C_DIRS),$(wildcard $(dir)/*.c))
 
 ASM_SOURCES = $(wildcard boot/kernel_entry.asm arch/*.asm)
