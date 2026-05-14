@@ -8,5 +8,6 @@
 #define PORT_TIMER_DATA 0x40
 
 void init_timer(uint32_t frequency);
+uint32_t get_tick();
 
 #endif

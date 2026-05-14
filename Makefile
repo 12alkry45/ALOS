@@ -72,13 +72,13 @@ $(OS_IMAGE): $(BOOT_BIN) $(KERNEL_BIN)
 	cat $^ > $@
 
 run: $(OS_IMAGE)
-	qemu-system-x86_64 -fda $<
+	qemu-system-x86_64 -fda $< -display cocoa,zoom-to-fit=on
 
 kernel.dis: $(KERNEL_BIN)
 	ndisasm -b 32 $< > $@
 
 debug: $(OS_IMAGE) $(KERNEL_ELF)
-	qemu-system-i386 -s -S -fda $(OS_IMAGE) -d guest_errors,int &
+	qemu-system-i386 -s -S -fda $(OS_IMAGE) -d guest_errors,int -display cocoa,zoom-to-fit=on &
 	$(GDB) -ex "target remote localhost:1234" -ex "symbol-file $(KERNEL_ELF)"
 
 clean:

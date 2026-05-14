@@ -5,7 +5,7 @@ void reverse(char str[]);
 int strlen(char str[]);
 void backspace(char str[]);
 void append(char str[], char n);
-int strcmp(char str1[], char str2[]);
+int strcmp(const char str1[], const char str2[]);
 void itoa(int value, char* str, int base);
 
 #endif

@@ -1,5 +1,6 @@
 #include <arch/isr.h>
 #include <drivers/screen.h>
+#include <fs/ramfs.h>
 #include <lib/mem.h>
 #include <lib/stdio.h>
 #include <mm/paging.h>
@@ -11,8 +12,9 @@ void kernel_main() {
 	irq_install();
 	clear_screen();
 	init_paging();
-	test_mm();
 	clear_screen();
+	test_ramfs();
+	test_ramfs_creation();
 
 	printf("Type something... END to halt the CPU\n> ");
 }

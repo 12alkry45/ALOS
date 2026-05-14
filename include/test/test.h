@@ -5,5 +5,7 @@
 #include <stdint.h>
 
 void test_mm();
+void test_ramfs();
+void test_ramfs_creation();
 
 #endif
