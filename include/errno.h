@@ -14,6 +14,6 @@ typedef enum {
 	ENFILE = -23,	  // Too many open files
 	ENOTEMPTY = -39,  // Dir not empty
 	ERROR = -100,	  // Generic error
-} fs_error_t;
+} vfs_error_t;
 
 #endif
