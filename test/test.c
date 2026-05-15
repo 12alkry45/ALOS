@@ -163,7 +163,7 @@ void test_ramfs_creation() {
 		return;
 	}
 
-	tree_node_t* home_dir = ramfs_lookup(root, "home");
+	tree_node_t* home_dir = lookup_path("/home");
 	if (!home_dir) {
 		printf("[FAIL] Base /home directory not found!\n");
 		return;
@@ -183,9 +183,9 @@ void test_ramfs_creation() {
 	}
 	printf("[OK] File \"config.ini\" created inside /home/user1.\n");
 
-	tree_node_t* verify_dir = ramfs_lookup(home_dir, "user1");
+	tree_node_t* verify_dir = lookup_path("/home/user1");
 	tree_node_t* verify_file =
-		(verify_dir) ? ramfs_lookup(verify_dir, "config.ini") : NULL;
+		(verify_dir) ? lookup_path("/home/user1/config.ini") : NULL;
 
 	if (!verify_file || verify_file != config_file) {
 		printf("[FAIL] Lookup system failed to find new structures!\n");

@@ -40,5 +40,6 @@ size_t ramfs_write(tree_node_t* file, void* data, uint32_t size,
 				   uint32_t offset);
 tree_node_t* ramfs_get_root_node();
 tree_node_t* create_node(tree_node_t* node, char* name, node_type_t type);
+tree_node_t* lookup_path(char* abs_path);
 
 #endif

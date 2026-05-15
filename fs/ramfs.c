@@ -88,3 +88,37 @@ tree_node_t* create_node(tree_node_t* parent, char* name, node_type_t type) {
 	}
 	return node;
 }
+
+static char* get_next_part(char* path, char** part, size_t* len) {
+	if (path == NULL || *path != '/' || path[1] == '\0') return NULL;
+	if (*path == '/') path++;
+	*part = path;
+	*len = 0;
+
+	while (*path != '\0' && *path != '/') {
+		(*len)++;
+		path++;
+	}
+	return path;
+}
+
+tree_node_t* lookup_path(char* abs_path) {
+	if (!abs_path || abs_path[0] != '/') return NULL;
+	tree_node_t* cur_node = ramfs_get_root_node();
+	if (!cur_node) return NULL;
+
+	char* cur_path = abs_path;
+	char* comp = NULL;
+	size_t comp_len = 0;
+
+	while ((cur_path = get_next_part(cur_path, &comp, &comp_len)) != NULL) {
+		if (comp_len > MAX_NAME_LENGTH) return NULL;
+		char buf[comp_len + 1];
+		memcpy(buf, comp, comp_len);
+		buf[comp_len] = '\0';
+		tree_node_t* next_node = ramfs_lookup(cur_node, buf);
+		if (!next_node) return NULL;
+		cur_node = next_node;
+	}
+	return cur_node;
+}
