@@ -6,6 +6,9 @@
 
 #define VFS_MAX_PATH_LENGTH 256
 #define VFS_MAX_FILENAME 64
+#define VFS_FILESYSTEM_NAME 16
+#define VFS_MAX_FS 8
+#define MAX_OPEN_FILES 32
 
 typedef enum { O_RDONLY, O_WRONLY, O_RDWR } vfs_open_mode_t;
 typedef enum { VNODE_NONE, VNODE_ROOT } vnode_flags_t;
@@ -41,7 +44,7 @@ typedef struct vnode_op {
 } vnode_op_t;
 
 typedef struct filesystem {
-	char fs_name[VFS_MAX_FILENAME];
+	char fs_name[VFS_FILESYSTEM_NAME];
 	int (*mount)(vfs_t* mount_point);
 	int (*unmount)(vfs_t* mount_point);
 	int (*get_root)(vfs_t* mount_point, struct vnode** result);
@@ -58,7 +61,7 @@ typedef struct vfs_file {
 void vfs_init();
 void vfs_register(filesystem_t* fs);
 
-int vfs_mount(const char* vfs_name, const char* mount_point);
+int vfs_mount(const char* fs_name, const char* mount_point);
 int vfs_unmount(const char* mount_point);
 
 fd_t vfs_open(const char* path, uint16_t mode);
