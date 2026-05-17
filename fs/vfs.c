@@ -2,7 +2,7 @@
 #include <fs/vfs.h>
 #include <lib/mem.h>
 #include <lib/string.h>
-#include <vfs_errno.h>
+#include <stdbool.h>
 
 vfs_t* vfs_root;
 filesystem_t* registered_fs[VFS_MAX_FS];
@@ -42,18 +42,19 @@ vfs_error_t vfs_mount(const char* fs_name, const char* mount_point) {
 	if (vfs_root == NULL)
 		vfs_node->mount_point = NULL;
 	else {
-		vfs_node->mount_point = lookup_path(mount_point);
-		if (vfs_node->mount_point == NULL ||
-			(vfs_node->mount_point->flags & VNODE_ROOT) == VNODE_ROOT) {
-			free(vfs_node);
+		vnode_t* mount_vnode = lookup_path(mount_point);
+		vfs_node->mount_point = mount_vnode;
+		if (mount_vnode == NULL ||
+			(mount_vnode->flags & VNODE_ROOT) == VNODE_ROOT) {
+			kfree(vfs_node);
 			return VFS_ENOENT;
 		}
-		if (vfs_node->mount_point->vnode_type != VDIR) {
-			free(vfs_node);
+		if (mount_vnode->vnode_type != VDIR) {
+			kfree(vfs_node);
 			return VFS_ENOTDIR;
 		}
-		vfs_node->mount_point->ref++;
-		vfs_node->mount_point->mounted_vfs = vfs_node;
+		mount_vnode->ref++;
+		mount_vnode->mounted_vfs = vfs_node;
 	}
 	vfs_node->vfs_op->mount(vfs_node);
 
@@ -66,13 +67,16 @@ vfs_error_t vfs_mount(const char* fs_name, const char* mount_point) {
 }
 
 vfs_error_t vfs_unmount(const char* mount_point) {
-	vnode_t* vnode = lookup_path(mount_point);
-	if (vnode == NULL) return VFS_ENOENT;
-	if ((vnode->flags & VNODE_ROOT) != VNODE_ROOT) return VFS_ERROR;
-	vfs_t* vfs_node = vnode->cur_vfs;
+	vnode_t* mount_vnode = lookup_path(mount_point);
+	if (mount_vnode == NULL) return VFS_ENOENT;
+	if ((mount_vnode->flags & VNODE_ROOT) != VNODE_ROOT) return VFS_ERROR;
+	vfs_t* vfs_node = mount_vnode->cur_vfs;
+
 	if (vfs_root == vfs_node) return VFS_EACCESS;
-	vfs_node->mount_point->mounted_vfs = NULL;
-	vfs_node->mount_point->ref--;
+
+	mount_vnode = vfs_node->mount_point;
+	mount_vnode->mounted_vfs = NULL;
+	mount_vnode->ref--;
 
 	vfs_node->vfs_op->unmount(vfs_node);
 
@@ -80,15 +84,47 @@ vfs_error_t vfs_unmount(const char* mount_point) {
 	while (cur->next_fs != vfs_node) cur = cur->next_fs;
 	cur->next_fs = NULL;
 
-	free(vfs_node);
+	kfree(vfs_node);
 	return VFS_OK;
 }
 
-fd_t vfs_open(const char* path, uint16_t mode);
-int vfs_close(fd_t descriptor);
-
 size_t vfs_read(fd_t fd, void* buffer, size_t size);
 size_t vfs_write(fd_t fd, const void* data, size_t size);
+
+static fd_t find_free_fd() {
+	for (int i = 0; i < MAX_OPEN_FILES; i++) {
+		if (vfs_open_file[i].vnode == NULL) return i;
+	}
+	return VFS_ENFILE;
+}
+
+fd_t vfs_open(const char* path, uint16_t mode) {
+	vnode_t* file_node = lookup_path(path);
+	if (file_node == NULL) return VFS_ENOENT;
+	if (file_node->vnode_type != VREG) return VFS_EISDIR;
+
+	fd_t descr = find_free_fd();
+	if (descr == VFS_ENFILE) return VFS_ENFILE;
+
+	file_node->ref++;
+	vfs_open_file[descr].mode = mode;
+	vfs_open_file[descr].vnode = file_node;
+	vfs_open_file[descr].position = 0;
+	return descr;
+}
+
+static bool is_fd_valid(fd_t fd) {
+	if (fd < 0 || fd > MAX_OPEN_FILES) return false;
+	if (vfs_open_file[fd].vnode == NULL) return false;
+	return true;
+}
+
+vfs_error_t vfs_close(fd_t fd) {
+	if (!is_fd_valid(fd)) return VFS_EBADF;
+	vfs_open_file[fd].vnode->ref--;
+	vfs_open_file[fd].vnode = NULL;
+	return VFS_OK;
+}
 
 static vnode_t* lookup_path(const char* path) {
 	if (!path || path[0] != '/') return NULL;

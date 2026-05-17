@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <vfs_errno.h>
 
 #define VFS_MAX_PATH_LENGTH 256
 #define VFS_MAX_FILENAME 64
@@ -30,7 +31,7 @@ typedef struct vnode {
 
 	vfs_t* mounted_vfs;
 	vfs_t* cur_vfs;
-	vnode_op_t* vnode_op;
+	struct vnode_op* vnode_op;
 
 	vtype_t vnode_type;
 	uint32_t ref;
@@ -61,11 +62,11 @@ typedef struct vfs_file {
 void vfs_init();
 void vfs_register(filesystem_t* fs);
 
-int vfs_mount(const char* fs_name, const char* mount_point);
-int vfs_unmount(const char* mount_point);
+vfs_error_t vfs_mount(const char* fs_name, const char* mount_point);
+vfs_error_t vfs_unmount(const char* mount_point);
 
 fd_t vfs_open(const char* path, uint16_t mode);
-int vfs_close(fd_t descriptor);
+vfs_error_t vfs_close(fd_t descriptor);
 
 size_t vfs_read(fd_t fd, void* buffer, size_t size);
 size_t vfs_write(fd_t fd, const void* data, size_t size);
