@@ -88,9 +88,6 @@ vfs_error_t vfs_unmount(const char* mount_point) {
 	return VFS_OK;
 }
 
-size_t vfs_read(fd_t fd, void* buffer, size_t size);
-size_t vfs_write(fd_t fd, const void* data, size_t size);
-
 static fd_t find_free_fd() {
 	for (int i = 0; i < MAX_OPEN_FILES; i++) {
 		if (vfs_open_file[i].vnode == NULL) return i;
@@ -124,6 +121,28 @@ vfs_error_t vfs_close(fd_t fd) {
 	vfs_open_file[fd].vnode->ref--;
 	vfs_open_file[fd].vnode = NULL;
 	return VFS_OK;
+}
+
+size_t vfs_read(fd_t fd, void* buffer, size_t size) {
+	if (!is_fd_valid(fd)) return VFS_EBADF;
+	vfs_file_t* open = &vfs_open_file[fd];
+	if (open->mode != O_RDONLY && open->mode != O_RDWR) return VFS_EACCESS;
+	int ret =
+		open->vnode->vnode_op->read(open->vnode, buffer, size, open->position);
+	if (ret < 0) return ret;
+	open->position += ret;
+	return ret;
+}
+
+size_t vfs_write(fd_t fd, const void* data, size_t size) {
+	if (!is_fd_valid(fd)) return VFS_EBADF;
+	vfs_file_t* open = &vfs_open_file[fd];
+	if (open->mode != O_WRONLY && open->mode != O_RDWR) return VFS_EACCESS;
+	int ret =
+		open->vnode->vnode_op->write(open->vnode, data, size, open->position);
+	if (ret < 0) return ret;
+	open->position += ret;
+	return ret;
 }
 
 static vnode_t* lookup_path(const char* path) {
