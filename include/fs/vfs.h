@@ -70,5 +70,6 @@ vfs_error_t vfs_close(fd_t descriptor);
 
 size_t vfs_read(fd_t fd, void* buffer, size_t size);
 size_t vfs_write(fd_t fd, const void* data, size_t size);
+vfs_t* get_vfs_root();
 
 #endif

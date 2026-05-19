@@ -18,6 +18,8 @@ void vfs_init() {
 	for (size_t i = 0; i < MAX_OPEN_FILES; i++) vfs_open_file[i].vnode = NULL;
 }
 
+vfs_t* get_vfs_root() { return vfs_root; }
+
 void vfs_register(filesystem_t* fs) {
 	if (number_fs >= VFS_MAX_FS) return;
 	registered_fs[number_fs++] = fs;

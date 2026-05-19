@@ -28,11 +28,7 @@ typedef struct tree_node {
 	void* data;
 } tree_node_t;
 
-typedef struct {
-	tree_node_t* root_node;
-} ramfs_info_t;
-
-void ramfs_init();
+tree_node_t* ramfs_init_internal();
 tree_node_t* ramfs_lookup(tree_node_t* dir, const char* name);
 size_t ramfs_read(tree_node_t* file, void* buffer, uint32_t size,
 				  uint32_t offset);

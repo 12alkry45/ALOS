@@ -3,21 +3,49 @@
 #include <fs/ramfs.h>
 #include <lib/mem.h>
 
-ramfs_info_t* ramfs_info = NULL;
+tree_node_t* ramfs_root_node = NULL;
 
 tree_node_t* create_node(tree_node_t* node, char* name, node_type_t type);
 
-void ramfs_init() {
-	ramfs_info = (ramfs_info_t*)kmalloc(sizeof(ramfs_info_t));
+tree_node_t* ramfs_init_internal() {
 	tree_node_t* root_fs = (tree_node_t*)kmalloc(sizeof(tree_node_t));
 	root_fs->child = root_fs->parent = root_fs->sibling = NULL;
 	root_fs->meta.type = NODE_DIR;
+	memcpy(root_fs->meta.name, "/", 2); 
+	root_fs->meta.size = 0;
+	root_fs->data = NULL;
+	
+	uint32_t cur_time = get_tick();
+	root_fs->meta.create_time = cur_time;
+	root_fs->meta.access_time = cur_time;
+	root_fs->meta.modify_time = cur_time;
 
-	create_node(root_fs, "dev", NODE_DIR);
+	tree_node_t* dev  = create_node(root_fs, "dev", NODE_DIR);
+	tree_node_t* etc  = create_node(root_fs, "etc", NODE_DIR);
+	tree_node_t* root = create_node(root_fs, "root", NODE_DIR);
 	tree_node_t* home = create_node(root_fs, "home", NODE_DIR);
-	create_node(home, "hello.txt", NODE_FILE);
+	tree_node_t* user = create_node(home, "user", NODE_DIR);
+	
+	tree_node_t* readme = create_node(root, "readme.txt", NODE_FILE);
+	if (readme) {
+		const char* txt = "Welcome to ALOS Kernel!\n";
+		ramfs_write(readme, (void*)txt, strlen(txt), 0);
+	}
 
-	ramfs_info->root_node = root_fs;
+	tree_node_t* hostname = create_node(etc, "hostname", NODE_FILE);
+	if (hostname) {
+		const char* txt = "alos\n";
+		ramfs_write(hostname, (void*)txt, strlen(txt), 0);
+	}
+
+	tree_node_t* hello = create_node(user, "hello.txt", NODE_FILE);
+	if (hello) {
+		const char* txt = "Hello, world! You're here.\n";
+		ramfs_write(hello, (void*)txt, strlen(txt), 0);
+	}
+
+	ramfs_root_node = root_fs;
+	return ramfs_root_node;
 }
 
 tree_node_t* ramfs_lookup(tree_node_t* dir, const char* name) {
@@ -64,7 +92,7 @@ size_t ramfs_write(tree_node_t* file, void* data, uint32_t size,
 	return size;
 }
 
-tree_node_t* ramfs_get_root_node() { return ramfs_info->root_node; }
+tree_node_t* ramfs_get_root_node() { return ramfs_root_node; }
 
 tree_node_t* create_node(tree_node_t* parent, char* name, node_type_t type) {
 	tree_node_t* node = (tree_node_t*)kmalloc(sizeof(tree_node_t));
