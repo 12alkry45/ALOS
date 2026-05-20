@@ -1,7 +1,7 @@
 #include <arch/gdt.h>
 #include <arch/isr.h>
 #include <drivers/screen.h>
-#include <fs/ramfs.h>
+#include <fs/vfs.h>
 #include <lib/mem.h>
 #include <lib/stdio.h>
 #include <mm/paging.h>
@@ -18,7 +18,7 @@ void kernel_main(unsigned long magic, unsigned long addr) {
 	clear_screen();
 	init_paging();
 	clear_screen();
-	//  vfs_init();
-	//  test_vfs_layer();
+	vfs_init();
+
 	printf("Type something... END to halt the CPU\n> ");
 }

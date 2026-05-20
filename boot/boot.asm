@@ -23,8 +23,8 @@ _start:
     mov esp, stack_top
     push ebx ;multiboot info
     push eax ;magic 
-    call kernel_main
     cli
+    call kernel_main
 
 .hang:
     hlt
