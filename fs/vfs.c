@@ -60,10 +60,15 @@ vfs_error_t vfs_mount(const char* fs_name, const char* mount_point) {
 	}
 	vfs_node->vfs_op->mount(vfs_node);
 
-	if (vfs_root == NULL) vfs_root = vfs_node;
-	vfs_t* cur = vfs_root;
-	while (cur->next_fs != NULL) cur = cur->next_fs;
-	cur->next_fs = vfs_node;
+	if (vfs_root == NULL) {
+		vfs_root = vfs_node;
+	} else {
+		vfs_t* cur = vfs_root;
+		while (cur->next_fs != NULL) {
+			cur = cur->next_fs;
+		}
+		cur->next_fs = vfs_node;
+	}
 
 	return VFS_OK;
 }
@@ -76,15 +81,16 @@ vfs_error_t vfs_unmount(const char* mount_point) {
 
 	if (vfs_root == vfs_node) return VFS_EACCESS;
 
-	mount_vnode = vfs_node->mount_point;
-	mount_vnode->mounted_vfs = NULL;
-	mount_vnode->ref--;
+	if (vfs_node->mount_point != NULL) {
+		vfs_node->mount_point->mounted_vfs = NULL;
+		vfs_node->mount_point->ref--;
+	}
 
 	vfs_node->vfs_op->unmount(vfs_node);
 
 	vfs_t* cur = vfs_root;
-	while (cur->next_fs != vfs_node) cur = cur->next_fs;
-	cur->next_fs = NULL;
+	while (cur->next_fs != vfs_node && cur != NULL) cur = cur->next_fs;
+	if (cur != NULL) cur->next_fs = vfs_node->next_fs;
 
 	kfree(vfs_node);
 	return VFS_OK;
@@ -175,7 +181,11 @@ static vnode_t* lookup_path(const char* path) {
 													 &vnode_res);
 		}
 		if (vnode_res != NULL) {
-			vnode_res->vnode_op->lookup(vnode_res, name, &vnode_res);
+			vnode_t* next_node = NULL;
+			int status =
+				vnode_res->vnode_op->lookup(vnode_res, name, &next_node);
+			if (status != VFS_OK || next_node == NULL) return NULL;
+			vnode_res = next_node;
 		}
 
 		position = end_pos;

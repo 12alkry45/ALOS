@@ -75,5 +75,5 @@ void test_vfs_layer() {
 	ASSERT_TEST("Preventing unmounting of system root '/'",
 				unmnt_err == VFS_EACCESS);
 
-	printf("\n--- TEST END ---\n");
+	printf("\n--- TEST END ---\n\n");
 }

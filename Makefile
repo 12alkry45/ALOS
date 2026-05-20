@@ -69,7 +69,7 @@ kernel.dis: $(KERNEL_ELF)
 	objdump -d -M intel $< > $@
 
 debug: $(ISO_IMAGE) $(KERNEL_ELF)
-	qemu-system-i386 -s -S -cdrom $(ISO_IMAGE) -d guest_errors,int -display cocoa,zoom-to-fit=on &
+	qemu-system-i386 -cdrom $(ISO_IMAGE) -d guest_errors,int -display cocoa,zoom-to-fit=on &
 	$(GDB) -ex "target remote localhost:1234" -ex "symbol-file $(KERNEL_ELF)"
 
 clean:

@@ -18,8 +18,7 @@ void kernel_main(unsigned long magic, unsigned long addr) {
 	clear_screen();
 	init_paging();
 	clear_screen();
-	// vfs_init();
-	test_vfs_layer();
-
+	//  vfs_init();
+	//  test_vfs_layer();
 	printf("Type something... END to halt the CPU\n> ");
 }

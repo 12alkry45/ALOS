@@ -39,7 +39,7 @@ int mount_ramfs(vfs_t* mount_point) {
 
 	vnode_t* root = (vnode_t*)kmalloc(sizeof(vnode_t));
 	ramfs_info->root_vnode = root;
-	root->flags = VNODE_NONE;
+	root->flags = VNODE_ROOT;
 	root->mounted_vfs = NULL;
 	root->ref = 0;
 	root->vnode_op = &ramfs_vnode_op;
