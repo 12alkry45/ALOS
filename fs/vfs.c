@@ -10,6 +10,7 @@ size_t number_fs;
 vfs_file_t vfs_open_file[MAX_OPEN_FILES];
 
 static vnode_t* lookup_path(const char* path);
+static vfs_error_t split_path(const char* path, char* dir, char* name);
 
 void vfs_init() {
 	vfs_root = NULL;

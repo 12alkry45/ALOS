@@ -14,6 +14,7 @@ typedef enum {
 	VFS_ENFILE = -23,	  // Too many open files
 	VFS_ENOTEMPTY = -39,  // Dir not empty
 	VFS_ERROR = -100,	  // Generic error
+	VFS_ENOSYS = -101,	  // No function realisation
 } vfs_error_t;
 
 #endif

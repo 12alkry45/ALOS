@@ -38,4 +38,11 @@ tree_node_t* ramfs_get_root_node();
 tree_node_t* create_node(tree_node_t* node, char* name, node_type_t type);
 tree_node_t* lookup_path(char* abs_path);
 
+void ramfs_detach_node(tree_node_t* node);
+void ramfs_attach_node(tree_node_t* parent, tree_node_t* node);
+
+void ramfs_remove_node(tree_node_t* node);
+void ramfs_remove_recursive(tree_node_t* node);
+
+
 #endif

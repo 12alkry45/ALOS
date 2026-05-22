@@ -150,3 +150,79 @@ tree_node_t* lookup_path(char* abs_path) {
 	}
 	return cur_node;
 }
+
+void ramfs_detach_node(tree_node_t* node) {
+	if (!node || !node->parent) return;
+	tree_node_t* parent = node->parent;
+	if (parent->child == node) {
+		parent->child = node->sibling;
+		node->sibling = NULL;
+		node->parent = NULL;
+		return;
+	}
+	tree_node_t* prev = parent->child;
+	while (prev && prev->sibling != node) {
+		prev = prev->sibling;
+	}
+	if (prev) {
+		prev->sibling = node->sibling;
+		node->sibling = NULL;
+		node->parent = NULL;
+	}
+}
+
+void ramfs_attach_node(tree_node_t* parent, tree_node_t* node) {
+	if (!parent || !node) return;
+	if (parent->meta.type != NODE_DIR) return;
+	if (node->parent != NULL) return;
+	node->parent = parent;
+	node->sibling = parent->child;
+	parent->child = node;
+}
+
+static void ramfs_destroy_tree(tree_node_t* node) {
+	if (!node) return;
+	tree_node_t* child = node->child;
+	while (child) {
+		tree_node_t* next = child->sibling;
+		ramfs_destroy_tree(child);
+		child = next;
+	}
+	if (node->data) {
+		kfree(node->data);
+		node->data = NULL;
+	}
+	kfree(node);
+}
+
+void ramfs_remove_node(tree_node_t* node) {
+	if (!node) return;
+	if (node->parent == NULL) return;  // only unmount
+	if (node->meta.type == NODE_DIR && node->child != NULL) return;
+
+	ramfs_detach_node(node);
+	if (node->meta.type == NODE_FILE && node->data) {
+		kfree(node->data);
+		node->data = NULL;
+	}
+	kfree(node);
+}
+
+void ramfs_remove_recursive(tree_node_t* node) {
+	if (!node) return;
+	if (node->parent == NULL) return;
+
+	tree_node_t* child = node->child;
+    while (child) {
+        tree_node_t* next = child->sibling;
+        ramfs_destroy_tree(child);
+        child = next;
+    }
+    node->child = NULL;
+    ramfs_detach_node(node);
+	if (node->data) {
+		kfree(node->data);
+		node->data = NULL;
+	}
+	kfree(node);
+}

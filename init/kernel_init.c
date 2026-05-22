@@ -1,6 +1,7 @@
 #include <arch/gdt.h>
 #include <arch/isr.h>
 #include <drivers/screen.h>
+#include <fs/ramfs_vfs.h>
 #include <fs/vfs.h>
 #include <lib/mem.h>
 #include <lib/stdio.h>
@@ -18,7 +19,10 @@ void kernel_main(unsigned long magic, unsigned long addr) {
 	clear_screen();
 	init_paging();
 	clear_screen();
+
 	vfs_init();
+	ramfs_init();
+	vfs_mount("ramfs", "/");
 
 	printf("Type something... END to halt the CPU\n> ");
 }
