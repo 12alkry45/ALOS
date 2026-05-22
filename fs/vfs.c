@@ -153,6 +153,123 @@ size_t vfs_write(fd_t fd, const void* data, size_t size) {
 	return ret;
 }
 
+vfs_error_t vfs_create(const char* path, uint32_t mode) {
+	if (!path) return VFS_EINVAL;
+	char dir_path[VFS_MAX_PATH_LENGTH];
+	char file_name[VFS_MAX_FILENAME];
+	if (split_path(path, dir_path, file_name) != VFS_OK) {
+		return VFS_EINVAL;
+	}
+	vnode_t* dir = lookup_path(dir_path);
+	if (!dir) return VFS_ENOENT;
+	if (dir->vnode_type != VDIR) return VFS_ENOTDIR;
+	if (!dir->vnode_op->create) return VFS_ENOSYS;
+	vnode_t* file = NULL;
+	int status = dir->vnode_op->create(dir, file_name, mode, &file);
+	if (file) file->ref--;
+	return status;
+}
+
+vfs_error_t vfs_remove(const char* path) {
+	if (!path) return VFS_EINVAL;
+
+	char dir_path[VFS_MAX_PATH_LENGTH];
+	char file_name[VFS_MAX_FILENAME];
+	if (split_path(path, dir_path, file_name) != VFS_OK) {
+		return VFS_EINVAL;
+	}
+
+	vnode_t* dir = lookup_path(dir_path);
+	if (!dir) return VFS_ENOENT;
+	if (dir->vnode_type != VDIR) return VFS_ENOTDIR;
+	if (!dir->vnode_op->remove) return VFS_ENOSYS;
+	return dir->vnode_op->remove(dir, file_name);
+}
+
+vfs_error_t vfs_rename(const char* old_path, const char* new_path) {
+	if (!old_path || !new_path) return VFS_EINVAL;
+
+	char old_dir[VFS_MAX_PATH_LENGTH], new_dir[VFS_MAX_PATH_LENGTH];
+	char old_file[VFS_MAX_FILENAME], new_file[VFS_MAX_FILENAME];
+	if (split_path(old_path, old_dir, old_file) != VFS_OK) return VFS_EINVAL;
+	if (split_path(new_path, new_dir, new_file) != VFS_OK) return VFS_EINVAL;
+
+	vnode_t* old_dir_vnode = lookup_path(old_dir);
+	vnode_t* new_dir_vnode = lookup_path(new_dir);
+	if (!old_dir_vnode || !new_dir_vnode) return VFS_ENOENT;
+	if (old_dir_vnode->vnode_type != VDIR ||
+		new_dir_vnode->vnode_type != VDIR) {
+		return VFS_ENOTDIR;
+	}
+	if (!old_dir_vnode->vnode_op->rename) return VFS_ENOSYS;
+	return old_dir_vnode->vnode_op->rename(old_dir_vnode, old_file,
+										   new_dir_vnode, new_file);
+}
+
+vfs_error_t vfs_mkdir(const char* path, uint32_t mode) {
+	if (!path) return VFS_EINVAL;
+	char dir_path[VFS_MAX_PATH_LENGTH], dir_name[VFS_MAX_FILENAME];
+	if (split_path(path, dir_path, dir_name) != VFS_OK) return VFS_EINVAL;
+	vnode_t* dir = lookup_path(dir_path);
+	if (!dir) return VFS_ENOENT;
+	if (dir->vnode_type != VDIR) return VFS_ENOTDIR;
+	if (!dir->vnode_op->mkdir) return VFS_ENOSYS;
+	return dir->vnode_op->mkdir(dir, dir_name, mode);
+}
+
+vfs_error_t vfs_rmdir(const char* path) {
+	if (!path) return VFS_EINVAL;
+	char dir_path[VFS_MAX_PATH_LENGTH], dir_name[VFS_MAX_FILENAME];
+	if (split_path(path, dir_path, dir_name) != VFS_OK) return VFS_EINVAL;
+	vnode_t* dir = lookup_path(dir_path);
+	if (!dir) return VFS_ENOENT;
+	if (dir->vnode_type != VDIR) return VFS_ENOTDIR;
+	if (!dir->vnode_op->rmdir) return VFS_ENOSYS;
+	return dir->vnode_op->rmdir(dir, dir_name);
+}
+
+vfs_error_t vfs_readdir(const char* path, uint32_t index, char* name_buffer,
+						uint32_t name_buffer_size) {
+	if (!path || !name_buffer) return VFS_EINVAL;
+
+	vnode_t* dir = lookup_path(path);
+	if (!dir) return VFS_ENOENT;
+	if (dir->vnode_type != VDIR) return VFS_ENOTDIR;
+
+	if (!dir->vnode_op->readdir) return VFS_ENOSYS;
+	return dir->vnode_op->readdir(dir, index, name_buffer, name_buffer_size);
+}
+
+vfs_error_t vfs_getattr(const char* path, vfs_stat_t* stat_buf) {
+	if (!path || !stat_buf) return VFS_EINVAL;
+
+	vnode_t* node = lookup_path(path);
+	if (!node) return VFS_ENOENT;
+
+	if (!node->vnode_op->getattr) return VFS_ENOSYS;
+	return node->vnode_op->getattr(node, stat_buf);
+}
+
+vfs_error_t vfs_setattr(const char* path, vfs_stat_t* stat_buf, uint32_t mask) {
+	if (!path || !stat_buf) return VFS_EINVAL;
+
+	vnode_t* node = lookup_path(path);
+	if (!node) return VFS_ENOENT;
+
+	if (!node->vnode_op->setattr) return VFS_ENOSYS;
+	return node->vnode_op->setattr(node, stat_buf, mask);
+}
+
+vfs_error_t vfs_access(const char* path, uint32_t mode) {
+	if (!path) return VFS_EINVAL;
+
+	vnode_t* node = lookup_path(path);
+	if (!node) return VFS_ENOENT;
+
+	if (!node->vnode_op->access) return VFS_ENOSYS;
+	return node->vnode_op->access(node, mode);
+}
+
 static vnode_t* lookup_path(const char* path) {
 	if (!path || path[0] != '/') return NULL;
 
@@ -197,4 +314,33 @@ static vnode_t* lookup_path(const char* path) {
 	}
 
 	return vnode_res;
+}
+
+static vfs_error_t split_path(const char* path, char* dir, char* name) {
+	if (!path || !dir || !name) return VFS_ERROR;
+
+	const char* last_slash = NULL;
+	for (const char* p = path; *p; p++) {
+		if (*p == '/') last_slash = p;
+	}
+
+	if (!last_slash) return VFS_ERROR;
+
+	size_t dir_len = last_slash - path;
+	if (dir_len == 0) {
+		dir[0] = '/';
+		dir[1] = '\0';
+	} else {
+		if (dir_len >= VFS_MAX_PATH_LENGTH) return VFS_ERROR;
+		memcpy(dir, path, dir_len);
+		dir[dir_len] = '\0';
+	}
+
+	const char* name_start = last_slash + 1;
+	if (*name_start == '\0') return VFS_ERROR;
+
+	size_t name_len = strlen(name_start);
+	if (name_len >= VFS_MAX_FILENAME) return VFS_ERROR;
+	memcpy(name, name_start, name_len + 1);
+	return VFS_OK;
 }
