@@ -16,8 +16,7 @@
 	} while (0)
 
 void test_mm();
-void test_ramfs();
-void test_ramfs_creation();
 void test_vfs_layer();
+void test_vfs_func();
 
 #endif
