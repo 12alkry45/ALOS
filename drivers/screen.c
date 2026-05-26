@@ -4,8 +4,8 @@
 
 static int32_t get_cursor_offset();
 static void set_cursor_offset(int32_t offset);
-static int32_t get_offset_row();
-static int32_t get_offset_col();
+static int32_t get_offset_row(int32_t offset);
+static int32_t get_offset_col(int32_t offset);
 static int32_t get_offset(int32_t col, int32_t row);
 static int32_t print_char(const char c, int32_t col, int32_t row, uint8_t attr);
 

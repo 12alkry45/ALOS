@@ -1,3 +1,9 @@
+section .data
+
+global gdt_start
+global gdt_end
+global gdt_descriptor
+
 gdt_start: 
     dd 0x0 ; 4 byte
     dd 0x0 ; 4 byte

@@ -1,0 +1,148 @@
+#include <arch/memory.h>
+#include <fs/ramfs_vfs.h>
+#include <fs/vfs.h>
+#include <lib/string.h>
+#include <test/test.h>
+
+void test_vfs_layer() {
+	printf("\n --- TEST SIMPLE VFS ---\n");
+
+	vfs_init();
+	ramfs_init();
+
+	vfs_error_t mnt_err = vfs_mount("ramfs", "/");
+	ASSERT_TEST("Mounting RAMFS to root '/'", mnt_err == VFS_OK);
+	ASSERT_TEST("Checking if vfs_root is set", get_vfs_root() != NULL);
+
+	fd_t fd_read = vfs_open("/home/user/hello.txt", O_RDONLY);
+	ASSERT_TEST("Opening initialized file /home/user/hello.txt", fd_read >= 0);
+
+	if (fd_read >= 0) {
+		char read_buffer[64];
+		memset(read_buffer, 0, sizeof(read_buffer));
+
+		size_t bytes_read = vfs_read(fd_read, read_buffer, 13);
+		ASSERT_TEST("Reading from file", bytes_read == 13);
+		ASSERT_TEST("Verifying read data content",
+					strcmp(read_buffer, "Hello, world!") == 0);
+
+		size_t bad_write = vfs_write(fd_read, "CrashTest", 9);
+		ASSERT_TEST("Preventing write to O_RDONLY file",
+					(int)bad_write == VFS_EACCESS);
+
+		vfs_error_t close_err = vfs_close(fd_read);
+		ASSERT_TEST("Closing file descriptor", close_err == VFS_OK);
+	}
+
+	fd_t fd_write = vfs_open("/etc/hostname", O_RDWR);
+	ASSERT_TEST("Opening configuration file /etc/hostname in O_RDWR",
+				fd_write >= 0);
+
+	if (fd_write >= 0) {
+		char host_buffer[32];
+		memset(host_buffer, 0, sizeof(host_buffer));
+
+		size_t r1 = vfs_read(fd_write, host_buffer, 5);
+		ASSERT_TEST("Reading default hostname", r1 == 5);
+
+		extern vfs_file_t vfs_open_file[MAX_OPEN_FILES];
+		ASSERT_TEST("Checking file position increment",
+					vfs_open_file[fd_write].position == 5);
+
+		const char* patch = "patched";
+		size_t w1 = vfs_write(fd_write, patch, 7);
+		ASSERT_TEST("Writing modifications into file", w1 == 7);
+		ASSERT_TEST("Checking file position after write",
+					vfs_open_file[fd_write].position == 12);
+
+		vfs_close(fd_write);
+	}
+
+	fd_t fd_fake = vfs_open("/dev/non_exist", O_RDONLY);
+	ASSERT_TEST("Opening non-existent path returns ENOENT",
+				fd_fake == VFS_ENOENT);
+
+	fd_t fd_dir = vfs_open("/home/user", O_RDONLY);
+	ASSERT_TEST("Opening directory as file returns EISDIR",
+				fd_dir == VFS_EISDIR);
+
+	char dummy[5];
+	size_t r_bad = vfs_read(99, dummy, 5);
+	ASSERT_TEST("Reading from invalid FD returns EBADF",
+				(int)r_bad == VFS_EBADF);
+
+	vfs_error_t unmnt_err = vfs_unmount("/");
+	ASSERT_TEST("Preventing unmounting of system root '/'",
+				unmnt_err == VFS_EACCESS);
+
+	printf("\n--- TEST END ---\n\n");
+}
+
+void test_vfs_func() {
+	printf("\n --- TEST VFS MANAGEMENT ---\n");
+	vfs_init();
+	ramfs_init();
+	vfs_mount("ramfs", "/");
+
+	vfs_error_t err;
+	err = vfs_mkdir("/tmp", 0755);
+	ASSERT_TEST("vfs_mkdir: creating new directory /tmp", err == VFS_OK);
+	err = vfs_mkdir("/tmp", 0755);
+	ASSERT_TEST("vfs_mkdir: EEXIST when creating existing directory",
+				err == VFS_EEXIST);
+	err = vfs_mkdir("/ghost/folder", 0755);
+	ASSERT_TEST("vfs_mkdir: ENOENT for missing parent path", err == VFS_ENOENT);
+
+	err = vfs_create("/tmp/test.txt", 0644);
+	ASSERT_TEST("vfs_create: creating new file /tmp/test.txt", err == VFS_OK);
+	err = vfs_create("/tmp/test.txt", 0644);
+	ASSERT_TEST("vfs_create: EEXIST when creating existing file",
+				err == VFS_EEXIST);
+				
+	err = vfs_remove("/tmp/ghost.txt");
+	ASSERT_TEST("vfs_remove: ENOENT for non-existent file", err == VFS_ENOENT);
+	err = vfs_remove("/tmp");
+	ASSERT_TEST("vfs_remove: EISDIR when trying to remove directory",
+				err == VFS_EISDIR);
+	err = vfs_rmdir("/tmp");
+	ASSERT_TEST("vfs_rmdir: ENOTEMPTY when directory has files",
+				err == VFS_ENOTEMPTY);
+
+	err = vfs_rename("/tmp/test.txt", "/tmp/renamed.txt");
+	ASSERT_TEST("vfs_rename: renaming file successfully", err == VFS_OK);
+	fd_t fd_old = vfs_open("/tmp/test.txt", O_RDONLY);
+	ASSERT_TEST("vfs_rename: verifying old path is gone", fd_old == VFS_ENOENT);
+	if (fd_old >= 0) vfs_close(fd_old);
+
+	fd_t fd_new = vfs_open("/tmp/renamed.txt", O_RDONLY);
+	ASSERT_TEST("vfs_rename: verifying new path exists", fd_new >= 0);
+	if (fd_new >= 0) vfs_close(fd_new);
+
+	err = vfs_rename("/tmp/ghost.txt", "/tmp/target.txt");
+	ASSERT_TEST("vfs_rename: ENOENT for missing source file",
+				err == VFS_ENOENT);
+
+	char buf[32];
+	memset(buf, 0, sizeof(buf));
+
+	err = vfs_readdir("/tmp", 0, buf, sizeof(buf));
+	ASSERT_TEST("vfs_readdir: reading index 0", err == VFS_OK);
+	ASSERT_TEST("vfs_readdir: buffer is not empty", strlen(buf) > 0);
+
+	memset(buf, 0, sizeof(buf));
+	err = vfs_readdir("/tmp", 99, buf, sizeof(buf));
+	ASSERT_TEST("vfs_readdir: returns ENOENT/VFS_EOF for out of bounds index",
+				err == VFS_ENOENT || err == VFS_OK);
+
+	err = vfs_readdir("/tmp/renamed.txt", 0, buf, sizeof(buf));
+	ASSERT_TEST("vfs_readdir: ENOTDIR when path is a file", err == VFS_ENOTDIR);
+
+	err = vfs_remove("/tmp/renamed.txt");
+	ASSERT_TEST("vfs_remove: clean up file", err == VFS_OK);
+	err = vfs_rmdir("/tmp");
+	ASSERT_TEST("vfs_rmdir: clean up empty directory", err == VFS_OK);
+	err = vfs_rmdir("/tmp");
+	ASSERT_TEST("vfs_rmdir: ENOENT after deletion", err == VFS_ENOENT);
+
+	printf("\n--- TEST END ---\n\n");
+}

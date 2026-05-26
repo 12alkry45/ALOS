@@ -1,30 +1,27 @@
-CROSS = /home/alesha/opt/cross/bin/i686-elf-
+CROSS = ~/opt/cross/bin/i686-elf-
 CC = $(CROSS)gcc
 LD = $(CROSS)ld
 GDB = $(CROSS)gdb
 AR = $(CROSS)ar
 
-CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
+CFLAGS = -O0 -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
 CFLAGS += -I include
 CFLAGS += -MMD -MP
 
-LDFLAGS = -Ttext 0x1000
+LDFLAGS = -T linker.ld -m elf_i386
 
 BUILD_DIR = build
 
-C_DIRS = kernel drivers arch lib mm init include test
+C_DIRS = kernel drivers arch lib mm init include test fs
 C_SOURCES = $(foreach dir,$(C_DIRS),$(wildcard $(dir)/*.c))
 
-ASM_SOURCES = $(wildcard boot/kernel_entry.asm arch/*.asm)
-BOOTSECT_ASM = $(wildcard boot/bootsect.asm)
+ASM_SOURCES = $(wildcard arch/*.asm boot/boot.asm )
 
 obj_from_c = $(patsubst %.c,$(BUILD_DIR)/%.o,$(1))
 obj_from_asm = $(patsubst %.asm,$(BUILD_DIR)/%.o,$(1))
-bin_from_asm = $(patsubst %.asm,$(BUILD_DIR)/%.bin,$(1))
 
 C_OBJS = $(call obj_from_c,$(C_SOURCES))
 ASM_OBJS = $(call obj_from_asm,$(ASM_SOURCES))
-BOOT_BIN = $(call bin_from_asm,$(BOOTSECT_ASM))
 
 KERNEL_OBJS = $(ASM_OBJS) $(C_OBJS)
 C_DEPS = $(C_OBJS:.o=.d)
@@ -33,23 +30,18 @@ LIB_SOURCES = $(wildcard lib/*.c)
 LIB_OBJS = $(call obj_from_c,$(LIB_SOURCES))
 LIB_TARGET = $(BUILD_DIR)/lib/lib.a
 
-KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 KERNEL_ELF = $(BUILD_DIR)/kernel.elf 
-OS_IMAGE = $(BUILD_DIR)/os-image.bin
+ISO_IMAGE = $(BUILD_DIR)/os-image.iso
 
 -include $(C_DEPS)
 
 .PHONY: all run debug clean
 
-all: $(OS_IMAGE)
+all: $(ISO_IMAGE)
 
 $(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.bin: %.asm
-	@mkdir -p $(@D)
-	nasm $< -f bin -o $@
 
 $(BUILD_DIR)/%.o: %.asm
 	@mkdir -p $(@D)
@@ -59,26 +51,25 @@ $(LIB_TARGET): $(LIB_OBJS)
 	@mkdir -p $(@D)
 	$(AR) rcs $@ $^
 
-$(KERNEL_BIN): $(KERNEL_OBJS) $(LIB_TARGET)
-	@mkdir -p $(@D)
-	$(LD) $(LDFLAGS) --oformat binary -o $@ $^
-
 $(KERNEL_ELF): $(KERNEL_OBJS) $(LIB_TARGET)
 	@mkdir -p $(@D)
-	$(LD) $(LDFLAGS) -o $@ $^
+	$(LD) $(LDFLAGS) -o $@ $(KERNEL_OBJS) $(LIB_TARGET)
 
-$(OS_IMAGE): $(BOOT_BIN) $(KERNEL_BIN)
-	@mkdir -p $(@D)
-	cat $^ > $@
+$(ISO_IMAGE) : $(KERNEL_ELF)
+	@mkdir -p $(BUILD_DIR)/iso/boot/grub
+	cp $(KERNEL_ELF) $(BUILD_DIR)/iso/boot/kernel.elf
+	cp grub.cfg $(BUILD_DIR)/iso/boot/grub/grub.cfg
+	i686-elf-grub-mkrescue -o $@ $(BUILD_DIR)/iso 2>/dev/null
+	@echo "ISO is created: $@"
 
-run: $(OS_IMAGE)
-	qemu-system-x86_64 -fda $<
+run: $(ISO_IMAGE)
+	qemu-system-i386 -cdrom $< -display cocoa,zoom-to-fit=on
 
-kernel.dis: $(KERNEL_BIN)
-	ndisasm -b 32 $< > $@
+kernel.dis: $(KERNEL_ELF)
+	objdump -d -M intel $< > $@
 
-debug: $(OS_IMAGE) $(KERNEL_ELF)
-	qemu-system-i386 -s -fda $(OS_IMAGE) -d guest_errors,int &
+debug: $(ISO_IMAGE) $(KERNEL_ELF)
+	qemu-system-i386 -cdrom $(ISO_IMAGE) -d guest_errors,int -display cocoa,zoom-to-fit=on &
 	$(GDB) -ex "target remote localhost:1234" -ex "symbol-file $(KERNEL_ELF)"
 
 clean:

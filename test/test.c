@@ -1,5 +1,5 @@
+#include <arch/memory.h>
 #include <lib/mem.h>
-#include <lib/stdio.h>
 #include <test/test.h>
 
 #define PRINT_PTR(name, ptr) printf("  %s: %p\n", name, ptr)

@@ -5,7 +5,7 @@
 extern heap_t* kheap;
 extern page_directory_t* kernel_directory;
 
-uint32_t free_memory_addr = 0x100000;
+uint32_t free_memory_addr = 0x300000;
 
 void* kernel_malloc(size_t size, int align, uint32_t* phys_addr) {
 	if (kheap != 0) {

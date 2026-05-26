@@ -21,3 +21,7 @@ void init_timer(uint32_t frequency) {
 	port_byte_out(PORT_TIMER_DATA, low);
 	port_byte_out(PORT_TIMER_DATA, high);
 }
+
+uint32_t get_tick() {
+	return tick;
+}
